@@ -45,10 +45,20 @@ S pomočjo spletnih iskalnikov kot so Google Scholar ali iskalnikov založnikov 
 - **repozitorij:** https://github.com/PainOfExistance/HouseAI
 - **programski jezik:** Python
 - **opravila**
-    1. razvojna iteracija 1
-    2. razvojna iteracija 2
-    3. razvojna iteracija 3
-    4. razvojna iteracija 4
+    1. razvojna iteracija
+        - pregled podatkovnih zbirk in izbor katere bomo uporabili
+        - vzpostavitev okolja za programiranje
+        - priprava podatkov za uporabo s knjižnico Tensorflow
+    2. razvojna iteracija
+        - testiranje GAN s CT slikami
+        - implementacija CNN
+    3. razvojna iteracija
+        - testiranje z drugimi CNN pred-trenirani modeli
+        - optimizacija
+    4. razvojna iteracija
+        - uporabniški vmesnik za aplikacijo
+        - primerjava rezultatov z drugimi modeli
+        - pisanje članka
 - **opis rešitve:** UML diagram
 
 ## Viri
