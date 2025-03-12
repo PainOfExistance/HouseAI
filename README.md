@@ -28,8 +28,6 @@
     - attention mechanisms + CNN
 
 ## Definicija problema
-**Poglavje na vsebuje opis problema, kjer ga v nekaj stavkih definirate. Definirajte ali izbrana problematika izhaja iz realnega sveta oziroma je ta umetno ustvarjena. Problem skušajte tudi formulirati z matematično notacijo. Na koncu poglavja podajte tudi pet ključnih besed, ki se nanašajo na vašo rešitev, problem in metodo evaluacije vaših rešitev problema. Pri pripravi ključnih besed si pomagajte tudi s pregledom sorodnih del.**
-
 Pljučni rak je vodilni vzrok smrti zaradi raka. Pogosto je zaznan prepozno, ko so možnosti zdravljenja zelo omejene. Delimo ga na dva tipa, drobnocelični pljučni rak (angl. small cell lung cancer - SCLC) in nedrobnocelični pljučni rak (angl. non-small cell lung cancer - NSCLC) [[1]](#1). Najpogostejši in najboljši način za odkritje abnormalnosti v pljučih je nizkodozno računalniško tomografiranje (CT) [[2, 3]](#2). CT slike pregleda radiolog in na podlagi nadaljnih raziskav na pacientu ugotovi če ima rakave celice [[3]](#3). Zaradi velike možnosti človeške napake se je z razvojem nevronskih mrež začelo razvijati sisteme, ki s pomočjo umetne inteligence prepoznajo abnormalnosti na CT slikah [[4]](#4). Problem pri nevronskih mrežah je, da potrebujejo zelo veliko število označenih učnih podatkov, kar pa je pri medicinskih slikah pogosto težava. Za odpravitev te težave se v zadnjih letih na področju pljučnega raka eksperimentira z uporabo generativnih nasprotniških mrež (GAN) [[5, 6]](#5). GAN omogočajo učenje globokih reprezentacij brez obsežno označenih učnih podatkov. To dosežejo z izpeljavo signalov za povratno širitev napake (backpropagation) s pomočjo tekmovalnega procesa med dvema agentoma [[7]](#7).
 
 - **ključne besede**: računalniško podprta diagnostika (CAD), konvolucijska nevronska mreža (CNN), globoko učenje, obdelava medicinskih slik, generativna nasprotniška mreža (GAN)
@@ -37,6 +35,8 @@ Pljučni rak je vodilni vzrok smrti zaradi raka. Pogosto je zaznan prepozno, ko 
 
 ## Pregled sorodnih del
 S pomočjo spletnih iskalnikov kot so Google Scholar ali iskalnikov založnikov znanstvenih revij. Rezultat pregleda sorodnih del je seznam ključne literature vaše problematike in rešitve problema. Pregled evaluacije rešitve problema se navezuje na najdeno literaturo. Rezultat tega dela naloge je **seznam metod evaluacije rešitve problema.**
+
+Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene so LC25000, LIDC-IDRI (ali podmnožica LUNA16), DSB 2017 [[4]](#4). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s transformacijami nad slikami [[9]](#9). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[9, 10]](#9). Da se izognemo problemu male množice učnih podatkov lahko uporabimo tudi prej trenirane nevronske mreže. Tudi te lahko dosegajo natančnost nad 0.95 vendar zahtevajo dobro optimizacijo z uporabami metod prenosa znanja [[11]](#11)
 
 ## Načrt rešitve
 
@@ -59,7 +59,7 @@ S pomočjo spletnih iskalnikov kot so Google Scholar ali iskalnikov založnikov 
         - uporabniški vmesnik za aplikacijo
         - primerjava rezultatov z drugimi modeli
         - pisanje članka
-- **opis rešitve:** UML diagram
+- **opis rešitve:** tu mora bit UML diagram
 
 ## Viri
 [1] “Lung cancer.” Accessed: Mar. 12, 2025. [Online]. Available: https://www.who.int/news-room/fact-sheets/detail/lung-cancer \
@@ -69,3 +69,7 @@ S pomočjo spletnih iskalnikov kot so Google Scholar ali iskalnikov založnikov 
 [5] N. Ghaffar Nia, E. Kaplanoglu, and A. Nasab, “Evaluation of artificial intelligence techniques in disease diagnosis and prediction,” Discov Artif Intell, vol. 3, no. 1, p. 5, Jan. 2023, doi: 10.1007/s44163-023-00049-5. \
 [6] Q. Jin, H. Cui, C. Sun, Z. Meng, and R. Su, “Free-form tumor synthesis in computed tomography images via richer generative adversarial network,” Knowledge-Based Systems, vol. 218, p. 106753, Apr. 2021, doi: 10.1016/j.knosys.2021.106753. \
 [7] A. Creswell, T. White, V. Dumoulin, K. Arulkumaran, B. Sengupta, and A. A. Bharath, “Generative Adversarial Networks: An Overview,” IEEE Signal Processing Magazine, vol. 35, no. 1, pp. 53–65, Jan. 2018, doi: 10.1109/MSP.2017.2765202. \
+[8] Z. Gandhi et al., “Artificial Intelligence and Lung Cancer: Impact on Improving Patient Outcomes,” Cancers, vol. 15, no. 21, p. 5236, Oct. 2023, doi: 10.3390/cancers15215236. \
+[9] I. D. Apostolopoulos, N. D. Papathanasiou, and G. S. Panayiotakis, “Classification of lung nodule malignancy in computed tomography imaging utilising generative adversarial networks and semi-supervised transfer  learning,” Biocybernetics and Biomedical Engineering, vol. 41, no. 4, pp. 1243–1257, Oct. 2021, doi: 10.1016/j.bbe.2021.08.006. \
+[10] I. J. Goodfellow et al., “Generative Adversarial Networks,” arXiv.org. Accessed: Mar. 12, 2025. [Online]. Available: https://arxiv.org/abs/1406.2661v1 \
+[11] N. Kumar, M. Sharma, V. P. Singh, C. Madan, and S. Mehandia, “An empirical study of handcrafted and dense feature extraction techniques for lung and colon cancer classification from histopathological images,” Biomedical Signal Processing and Control, vol. 75, p. 103596, May 2022, doi: 10.1016/j.bspc.2022.103596. \
