@@ -1,31 +1,25 @@
 
-# HouseAI
+# Sistem za prepoznavo rakavih nodulov na pljučah z uporabo konvolucijskih nevronskih mrež nad podatki augmentiranimi z generativno nasprotniško mrežo
 
-## zapiski
-- KAJ TU DEJANSKO DELAMO? ZAZNAVAMO ČE SO PLJUČNI NODULI RAKAVI, 95% PLJUČNIH NODULOV NI RAKAVIH. učne množice imajo ponavadi označene neke atribute za te pljučne nodule, treba bi blo to malo pogledat
-- detekcija NSCLC in SCLC, SCLC predstavlja 80% primerov
-
-- podatki
-    - lndb grand challenge
-    - LC25000 (diagnoze pljučnega raka NSCLC in ostalo kar ne rabimo)
-    - LIDC-IDRI (lung nodule classification). alternativa: LUNA16
-    - NLST
-    - QIN LUNG CT (diagnoze pljučnega raka NSCLC)
-    - Data Science Bowl 2017 (diagnoze pljučnega raka)
-
-- GAN
-    - tensorflow: StyleGAN
-    - če rabimo pretvoriti slike iz ene domene v drugo (npr. različen način zajema slik) potem imamo CycleGAN
-    - Fréchet inception distance za preverjanje realizma slike
-
-- CNN
-    - ti modeli so ponavadi pre-trained in potem se uporabijo "Transfer learning" tehnike npr. "Fine tuning"
-    - VGG-16 in VGG-19 izgleda da so slabi za to kar mi delamo ampak so zelo popularni, tu je FF-VGG-19 z GAN in so rezultati dobri ampak ne dovolj dobri [https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991](https://sci-hub.se/https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991)
-    - AlexNet in/ali ResNet (obstajajo hibridi)
-    - U-Net (izgleda da je zlo popularno pri medicinskih slikah za segmentacijo)
-    - LDNNET (to ima zelo dobro natančnost) https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9386129
-    - Spatial Transformer Network + CNN (obscure knowledge...)
-    - attention mechanisms + CNN
+## stvari ki jih je še treba dodat do petka
+- PREGLED SORODNIH DEL
+    - GAN
+        - tensorflow: StyleGAN
+        - če rabimo pretvoriti slike iz ene domene v drugo (npr. različen način zajema slik) potem imamo CycleGAN
+        - Fréchet inception distance za preverjanje realizma slike
+    
+    - CNN
+        - ti modeli so ponavadi pre-trained in potem se uporabijo "Transfer learning" tehnike npr. "Fine tuning"
+        - VGG-16 in VGG-19 izgleda da so slabi za to kar mi delamo ampak so zelo popularni, tu je FF-VGG-19 z GAN in so rezultati dobri ampak ne dovolj dobri [https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991](https://sci-hub.se/https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991)
+        - AlexNet in/ali ResNet (obstajajo hibridi)
+        - U-Net (izgleda da je zlo popularno pri medicinskih slikah za segmentacijo)
+        - LDNNET (to ima zelo dobro natančnost) https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9386129
+        - Spatial Transformer Network + CNN (obscure knowledge...)
+        - attention mechanisms + CNN
+- DEFINICIJA PROBLEMA
+    - matematična notacija (lol)
+- NAČRT REŠITVE
+    - opis rešitve, boljša opravila
 
 ## Definicija problema
 Pljučni rak je vodilni vzrok smrti zaradi raka. Pogosto je zaznan prepozno, ko so možnosti zdravljenja zelo omejene. Delimo ga na dva tipa, drobnocelični pljučni rak (angl. small cell lung cancer - SCLC) in nedrobnocelični pljučni rak (angl. non-small cell lung cancer - NSCLC) [[1]](#1). Najpogostejši in najboljši način za odkritje abnormalnosti v pljučih je nizkodozno računalniško tomografiranje (CT) [[2, 3]](#2). CT slike pregleda radiolog in na podlagi nadaljnih raziskav na pacientu ugotovi če ima rakave celice [[3]](#3). Zaradi velike možnosti človeške napake se je z razvojem nevronskih mrež začelo razvijati sisteme, ki s pomočjo umetne inteligence prepoznajo abnormalnosti na CT slikah [[4]](#4). Problem pri nevronskih mrežah je, da potrebujejo zelo veliko število označenih učnih podatkov, kar pa je pri medicinskih slikah pogosto težava. Za odpravitev te težave se v zadnjih letih na področju pljučnega raka eksperimentira z uporabo generativnih nasprotniških mrež (GAN) [[5, 6]](#5). GAN omogočajo učenje globokih reprezentacij brez obsežno označenih učnih podatkov. To dosežejo z izpeljavo signalov za povratno širitev napake (backpropagation) s pomočjo tekmovalnega procesa med dvema agentoma [[7]](#7).
@@ -34,12 +28,9 @@ Pljučni rak je vodilni vzrok smrti zaradi raka. Pogosto je zaznan prepozno, ko 
 - **keywords**: Computer-aided diagnosis (CAD), Convolutional neural network (CNN), Deep learning, Medical image processing, Generative adversarial network (GAN)
 
 ## Pregled sorodnih del
-S pomočjo spletnih iskalnikov kot so Google Scholar ali iskalnikov založnikov znanstvenih revij. Rezultat pregleda sorodnih del je seznam ključne literature vaše problematike in rešitve problema. Pregled evaluacije rešitve problema se navezuje na najdeno literaturo. Rezultat tega dela naloge je **seznam metod evaluacije rešitve problema.**
-
-Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene so LC25000, LIDC-IDRI (ali podmnožica LUNA16), DSB 2017 [[4]](#4). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s transformacijami nad slikami [[9]](#9). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[9, 10]](#9). Da se izognemo problemu male množice učnih podatkov lahko uporabimo tudi prej trenirane nevronske mreže. Tudi te lahko dosegajo natančnost nad 0.95 vendar zahtevajo dobro optimizacijo z uporabami metod prenosa znanja [[11]](#11)
+Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene v najboljših modelih v letih 2021 do 2024 so LC25000, LIDC-IDRI in LungCT-Diagnosis [[4]](#4). Veliko je tudi manjših množic kot so QIN LUNG CT in LUNA2016 [[9, 10]](#9). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s transformacijami nad slikami [[11]](#11). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[11, 12]](#11). Da se izognemo problemu male množice učnih podatkov lahko uporabimo tudi prej trenirane nevronske mreže. Tudi te lahko dosegajo natančnost nad 0.95 vendar zahtevajo dobro optimizacijo z uporabami metod prenosa znanja [[13]](#13)
 
 ## Načrt rešitve
-
 - **skupina:** 1
 - **sodelavci:** Matej Habjanič, Kristina Čović, Rene Rajzman, Liam Mesarec
 - **repozitorij:** https://github.com/PainOfExistance/HouseAI
@@ -70,6 +61,8 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
 [6] Q. Jin, H. Cui, C. Sun, Z. Meng, and R. Su, “Free-form tumor synthesis in computed tomography images via richer generative adversarial network,” Knowledge-Based Systems, vol. 218, p. 106753, Apr. 2021, doi: 10.1016/j.knosys.2021.106753. \
 [7] A. Creswell, T. White, V. Dumoulin, K. Arulkumaran, B. Sengupta, and A. A. Bharath, “Generative Adversarial Networks: An Overview,” IEEE Signal Processing Magazine, vol. 35, no. 1, pp. 53–65, Jan. 2018, doi: 10.1109/MSP.2017.2765202. \
 [8] Z. Gandhi et al., “Artificial Intelligence and Lung Cancer: Impact on Improving Patient Outcomes,” Cancers, vol. 15, no. 21, p. 5236, Oct. 2023, doi: 10.3390/cancers15215236. \
-[9] I. D. Apostolopoulos, N. D. Papathanasiou, and G. S. Panayiotakis, “Classification of lung nodule malignancy in computed tomography imaging utilising generative adversarial networks and semi-supervised transfer  learning,” Biocybernetics and Biomedical Engineering, vol. 41, no. 4, pp. 1243–1257, Oct. 2021, doi: 10.1016/j.bbe.2021.08.006. \
-[10] I. J. Goodfellow et al., “Generative Adversarial Networks,” arXiv.org. Accessed: Mar. 12, 2025. [Online]. Available: https://arxiv.org/abs/1406.2661v1 \
-[11] N. Kumar, M. Sharma, V. P. Singh, C. Madan, and S. Mehandia, “An empirical study of handcrafted and dense feature extraction techniques for lung and colon cancer classification from histopathological images,” Biomedical Signal Processing and Control, vol. 75, p. 103596, May 2022, doi: 10.1016/j.bspc.2022.103596. \
+[9] “QIN-LUNG-CT,” The Cancer Imaging Archive (TCIA). Accessed: Mar. 12, 2025. [Online]. Available: https://www.cancerimagingarchive.net/collection/qin-lung-ct/ \
+[10] “LUNA16 - Grand Challenge,” grand-challenge.org. Accessed: Mar. 12, 2025. [Online]. Available: https://luna16.grand-challenge.org/ \
+[11] I. D. Apostolopoulos, N. D. Papathanasiou, and G. S. Panayiotakis, “Classification of lung nodule malignancy in computed tomography imaging utilising generative adversarial networks and semi-supervised transfer  learning,” Biocybernetics and Biomedical Engineering, vol. 41, no. 4, pp. 1243–1257, Oct. 2021, doi: 10.1016/j.bbe.2021.08.006. \
+[12] I. J. Goodfellow et al., “Generative Adversarial Networks,” arXiv.org. Accessed: Mar. 12, 2025. [Online]. Available: https://arxiv.org/abs/1406.2661v1 \
+[13] N. Kumar, M. Sharma, V. P. Singh, C. Madan, and S. Mehandia, “An empirical study of handcrafted and dense feature extraction techniques for lung and colon cancer classification from histopathological images,” Biomedical Signal Processing and Control, vol. 75, p. 103596, May 2022, doi: 10.1016/j.bspc.2022.103596. \
