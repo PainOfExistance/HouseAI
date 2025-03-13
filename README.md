@@ -3,11 +3,6 @@
 
 ## stvari ki jih je še treba dodat do petka
 - PREGLED SORODNIH DEL
-    - GAN
-        - tensorflow: StyleGAN
-        - če rabimo pretvoriti slike iz ene domene v drugo (npr. različen način zajema slik) potem imamo CycleGAN
-        - Fréchet inception distance za preverjanje realizma slike
-    
     - CNN
         - ti modeli so ponavadi pre-trained in potem se uporabijo "Transfer learning" tehnike npr. "Fine tuning"
         - VGG-16 in VGG-19 izgleda da so slabi za to kar mi delamo ampak so zelo popularni, tu je FF-VGG-19 z GAN in so rezultati dobri ampak ne dovolj dobri [https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991](https://sci-hub.se/https://www.sciencedirect.com/science/article/abs/pii/S0208521621000991)
@@ -28,7 +23,7 @@ Pljučni rak je vodilni vzrok smrti zaradi raka. Pogosto je zaznan prepozno, ko 
 - **keywords**: Computer-aided diagnosis (CAD), Convolutional neural network (CNN), Deep learning, Medical image processing, Generative adversarial network (GAN)
 
 ## Pregled sorodnih del
-Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene v najboljših modelih v letih 2021 do 2024 so LC25000, LIDC-IDRI in LungCT-Diagnosis [[4]](#4). Veliko je tudi manjših množic kot so QIN LUNG CT in LUNA2016 [[9, 10]](#9). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s transformacijami nad slikami [[11]](#11). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[11, 12]](#11). Da se izognemo problemu male množice učnih podatkov lahko uporabimo tudi prej trenirane nevronske mreže. Tudi te lahko dosegajo natančnost nad 0.95 vendar zahtevajo dobro optimizacijo z uporabami metod prenosa znanja [[13]](#13)
+Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene v najboljših modelih v letih 2021 do 2024 so LC25000, LIDC-IDRI in LungCT-Diagnosis [[4]](#4). Veliko je tudi manjših množic kot so QIN LUNG CT in LUNA2016 [[9, 10]](#9). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s transformacijami nad slikami [[11]](#11). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[11, 12]](#11). StyleGAN generira nove slike na podlagi značilk učnih podatkov, kar bi lahko bilo uporabljeno za učenje značilk pljučnih nodulov [[13]](#13). CycleGAN lahko generira slike, ki so bile zajete v različnih domenah, kot je pretvorba MRI v CT [[14]](#14). Za preverjanje kako realistična je slika se uporablja Fretchet Inception Distance [[13, 14]](#13). Da se izognemo problemu male množice učnih podatkov lahko uporabimo tudi prej trenirane nevronske mreže. Tudi te lahko dosegajo natančnost nad 0.95 vendar zahtevajo dobro optimizacijo z uporabami metod prenosa znanja [[15]](#15)
 
 ## Načrt rešitve
 - **skupina:** 1
@@ -65,4 +60,6 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
 [10] “LUNA16 - Grand Challenge,” grand-challenge.org. Accessed: Mar. 12, 2025. [Online]. Available: https://luna16.grand-challenge.org/ \
 [11] I. D. Apostolopoulos, N. D. Papathanasiou, and G. S. Panayiotakis, “Classification of lung nodule malignancy in computed tomography imaging utilising generative adversarial networks and semi-supervised transfer  learning,” Biocybernetics and Biomedical Engineering, vol. 41, no. 4, pp. 1243–1257, Oct. 2021, doi: 10.1016/j.bbe.2021.08.006. \
 [12] I. J. Goodfellow et al., “Generative Adversarial Networks,” arXiv.org. Accessed: Mar. 12, 2025. [Online]. Available: https://arxiv.org/abs/1406.2661v1 \
-[13] N. Kumar, M. Sharma, V. P. Singh, C. Madan, and S. Mehandia, “An empirical study of handcrafted and dense feature extraction techniques for lung and colon cancer classification from histopathological images,” Biomedical Signal Processing and Control, vol. 75, p. 103596, May 2022, doi: 10.1016/j.bspc.2022.103596. \
+[13] T. Karras, S. Laine, and T. Aila, “A Style-Based Generator Architecture for Generative Adversarial Networks,” Mar. 29, 2019, arXiv: arXiv:1812.04948. doi: 10.48550/arXiv.1812.04948. \
+[14] A. Duval, L. Fillioux, and S. Saubert, “Deep Learning for Medical Imaging - Final Project Report Using CycleGANs to translate MRI to CT scans of the brain”.
+[15] N. Kumar, M. Sharma, V. P. Singh, C. Madan, and S. Mehandia, “An empirical study of handcrafted and dense feature extraction techniques for lung and colon cancer classification from histopathological images,” Biomedical Signal Processing and Control, vol. 75, p. 103596, May 2022, doi: 10.1016/j.bspc.2022.103596. \
