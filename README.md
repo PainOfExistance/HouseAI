@@ -30,7 +30,10 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
         - uporabniški vmesnik za aplikacijo
         - primerjava rezultatov z drugimi modeli
         - pisanje članka
-- **opis rešitve:** tu mora bit UML diagram
+- **UML diagram rešitve:**
+
+## ![houseai](https://github.com/user-attachments/assets/8773f997-e80c-4bc1-93d8-04deb556bbb0)
+
 
 ## Viri
 [1] “Lung cancer.” Accessed: Mar. 12, 2025. [Online]. Available: https://www.who.int/news-room/fact-sheets/detail/lung-cancer \
