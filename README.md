@@ -32,7 +32,8 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
         - pisanje članka
 - **UML diagram rešitve:**
 
-## ![houseai](https://github.com/user-attachments/assets/8773f997-e80c-4bc1-93d8-04deb556bbb0)
+## ![houseai](https://github.com/user-attachments/assets/2b8e0595-ee9a-4c0d-9393-afec296d37c2)
+
 
 
 ## Viri
