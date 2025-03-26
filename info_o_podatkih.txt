@@ -1,0 +1,69 @@
+NSCLC raki: Adenocarcinoma, Large cell carcinoma, Squamous cell carcinoma 
+verjetno bomo samo razlikovali med malignant/benign/normal in bomo vse rake dali v malignant? to je če bomo kombiniral datasete
+LIDC-IDRI in LUNA16 sta malo posebna ker podrobno anotirani pljučni noduli (ni samo je rak/ni rak) ampak mislim da nimamo točne informacije za to kateri noduli so rakavi al pa niso, nisem prepričan
+
+Chest CT-Scan images Dataset
+link: https://www.kaggle.com/datasets/mohamedhanyyy/chest-ctscan-images/data
+vir podatkov: ?
+število slik: 1000
+število pacientov: ?
+format slik: png/jpg, 256x256
+augmentacirane slike: ne
+anotacije: v mapah glede na vrsto
+kateri raki: Adenocarcinoma, Large cell carcinoma, Squamous cell carcinoma 
+
+IQ-OTH/NCCD
+link: https://www.kaggle.com/datasets/hamdallak/the-iqothnccd-lung-cancer-dataset
+vir podatkov: original
+število slik: 1190 
+število pacientov: 110 
+format slik: jpg
+augmentacirane slike: ne
+anotacije: v mapah glede na vrsto
+kateri raki: normal, benign, malignant 
+
+LC25000
+link: https://academictorrents.com/details/7a638ed187a6180fd6e464b3666a6ea0499af4af
+vir podatkov: original
+število slik: 15000 (750 pred augmentacijo)
+število pacientov: ?
+format slik: jpeg, 768x768, barvne slike
+augmentirane slike: da; left and right rotations (up to 25 degrees, 1.0 probability), horizontal and vertical flips (0.5 probability).
+anotacije: v mapah glede na vrsto
+kateri raki: 5000 lung adenocarcinomas,  5000 lung squamous cell carcinomas, 5000 benign lung tissues.
+
+LIDC-IDRI
+link: https://www.cancerimagingarchive.net/collection/lidc-idri/
+vir podatkov: original
+število slik: 244527
+število pacientov: 1010
+format slik:
+anotacije: anotirani so noduli na pljučah
+kateri raki: benign, malignant
+
+LungCT-Diagnosis
+link: https://www.cancerimagingarchive.net/collection/lungct-diagnosis/
+vir podatkov: original
+število slik: 4682
+število pacientov: 61
+format slik:
+anotacije:
+kateri raki: 
+
+QIN LUNG CT
+link:
+vir podatkov:
+število slik:
+število pacientov:
+format slik:
+anotacije:
+kateri raki: NSCLC
+
+LUNA2016 (to je subset LIDC-IDRI se mi zdi tak da je bolj kot ne samo če se odločimo LIDC-IDRI uporabljam bomo namesto onega)
+link:
+vir podatkov:
+število slik:
+število pacientov:
+format slik:
+anotacije:
+kateri raki: 
