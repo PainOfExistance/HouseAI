@@ -37,7 +37,7 @@ link: https://www.cancerimagingarchive.net/collection/lidc-idri/
 vir podatkov: original
 število slik: 244527
 število pacientov: 1010
-format slik:
+format slik: dicom?
 anotacije: anotirani so noduli na pljučah
 kateri raki: benign, malignant
 
@@ -46,24 +46,24 @@ link: https://www.cancerimagingarchive.net/collection/lungct-diagnosis/
 vir podatkov: original
 število slik: 4682
 število pacientov: 61
-format slik:
-anotacije:
-kateri raki: 
-
-QIN LUNG CT
-link:
-vir podatkov:
-število slik:
-število pacientov:
-format slik:
-anotacije:
+format slik: dicom
+anotacije: anotirani so noduli na pljučah (lokacija, in značilnosti)
 kateri raki: NSCLC
 
-LUNA2016 (to je subset LIDC-IDRI se mi zdi tak da je bolj kot ne samo če se odločimo LIDC-IDRI uporabljam bomo namesto onega)
-link:
-vir podatkov:
-število slik:
+QIN LUNG CT
+link: https://www.cancerimagingarchive.net/collection/qin-lung-ct/
+vir podatkov: 
+število slik:3,954
+število pacientov: 47
+format slik: dicom
+anotacije: segmentacija NSCLC tumorjev (omogoča analizo velikosti in oblike tumorja)
+kateri raki: NSCLC
+
+LUNA2016 
+link: https://luna16.grand-challenge.org/Home/
+vir podatkov: LIDC‑IDRI
+število slik: 888
 število pacientov:
-format slik:
-anotacije:
-kateri raki: 
+format slik: dicom
+anotacije: anotirani so noduli na pljučah (lokacija, velikosti, ocene malignosti)
+kateri raki: benign, malignant
