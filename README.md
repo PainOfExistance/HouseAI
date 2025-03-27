@@ -56,6 +56,10 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
 [16] R. Klangbunrueang, P. Pookduang, W. Chansanam, and T. Lunrasri, “AI-Powered Lung Cancer Detection: Assessing VGG16 and CNN Architectures for CT Scan Image Classification,” Informatics, vol. 12, no. 1, Art. no. 1, Mar. 2025, doi: 10.3390/informatics12010018. \
 [17] M. A. Thanoon, M. A. Zulkifley, M. A. A. Mohd Zainuri, and S. R. Abdani, “A Review of Deep Learning Techniques for Lung Cancer Screening and Diagnosis Based on CT Images,” Diagnostics, vol. 13, no. 16, p. 2617, Aug. 2023, doi: 10.3390/diagnostics13162617. \
 [18] S. Abunajm, N. Elsayed, Z. ElSayed, and M. Ozer, “Deep Learning Approach for Early Stage Lung Cancer Detection,” Feb. 15, 2023, arXiv: arXiv:2302.02456. doi: 10.48550/arXiv.2302.02456. \
+
+## 1. šprint
+Liam Mesarec, Kristina Čović: V sklopu opravila "pregled podatkovnih zbirk in izbor katere bomo uporabili" sva šla čez podatkovne množice ki jih lahko uporabimo za strojno učenje, o njih sma napisala informacije o tem kaj zajemajo, kako so anotirani, v katerem formatu so slike, katere modifikacije so bile vnaprej narejene nad slikami, koliko podatkov je v množici in nad koliko pacientov so bili izvedeni in viri podatkov. Razvila sva načrt katere učne podatke bi lahko kombinirali in katere tipe rakov bi lahko upoštevali.
+
 [19] Y. Chen, Y. Wang, F. Hu, L. Feng, T. Zhou, and C. Zheng, “LDNNET: Towards Robust Classification of Lung Nodule and Cancer Using Lung Dense Neural Network,” IEEE Access, vol. 9, pp. 50301–50320, 2021, doi: 10.1109/ACCESS.2021.3068896. \
 [20] I. Marinakis, K. Karampidis, and G. Papadourakis, “Pulmonary Nodule Detection, Segmentation and Classification Using Deep Learning: A Comprehensive Literature Review,” BioMedInformatics, vol. 4, no. 3, Art. no. 3, Sep. 2024, doi: 10.3390/biomedinformatics4030111.
 
