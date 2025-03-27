@@ -62,3 +62,10 @@ Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasifi
 ## 1. šprint
 Liam Mesarec, Kristina Čović: V sklopu opravila "pregled podatkovnih zbirk in izbor katere bomo uporabili" sva šla čez podatkovne množice ki jih lahko uporabimo za strojno učenje, o njih sma napisala informacije o tem kaj zajemajo, kako so anotirani, v katerem formatu so slike, katere modifikacije so bile vnaprej narejene nad slikami, koliko podatkov je v množici in nad koliko pacientov so bili izvedeni in viri podatkov. Razvila sva načrt katere učne podatke bi lahko kombinirali in katere tipe rakov bi lahko upoštevali.
 
+Matej Habjanič: V sklopu prvega sprinta je bila moja naloga pripraviti delovno okolje za našo delo. Zaradi uporabe programskega jezika Python, smo vspostavili venv okolje ter tudi izbrali knjižnice, ki jih bomo uporabljali. Te so sledeče:  
+    - tensorflow: grajenje nevronskih mrež  
+    - numpy: za hitre operacija in interoperabilnost s tensorflow  
+    - matplotlib: vizualizacija podatkov  
+    - seaborn: vizualizacija matrike zmede  
+    - sklearn: predobdelava in kategoriziranje podatkov  
+Po izdelavi preliminarnega dela sem tudi omogočil vizualizacijo natančnosti, izgibe in matreke zmede, kot tudi spreminjanje le teh skozi čas.  
