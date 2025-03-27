@@ -69,3 +69,6 @@ Matej Habjanič: V sklopu prvega sprinta je bila moja naloga pripraviti delovno 
     - seaborn: vizualizacija matrike zmede  
     - sklearn: predobdelava in kategoriziranje podatkov  
 Po izdelavi preliminarnega dela sem tudi omogočil vizualizacijo natančnosti, izgibe in matreke zmede, kot tudi spreminjanje le teh skozi čas.  
+
+Rene Rajzman:  V sklopu prvega sprinta sem razvil in treniral dva modela za klasifikacijo medicinskih slik. Prvi model je bila osnovna konvolucijska nevronska mreža za binarno klasifikacijo, ki je dosegla 32 % natančnost. Drugi model je temeljil na prenosnem učenju z MobileNetV2 in je dosegel 63 % natančnost. Oba modela sem shranil za nadaljnjo uporabo.
+
