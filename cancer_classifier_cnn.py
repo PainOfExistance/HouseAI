@@ -1,15 +1,16 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
 from sklearn.metrics import classification_report, confusion_matrix
 from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.layers import (GlobalAveragePooling2D, Dense, Dropout)
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.callbacks import EarlyStopping
-import matplotlib
+
 matplotlib.use('TkAgg')  # Force a reliable GUI backend
 
 # Constants
@@ -111,6 +112,39 @@ loss, accuracy = model.evaluate(test_generator)
 print(f"\nTest Loss: {loss:.4f}")
 print(f"Test Accuracy: {accuracy:.4f}")
 
+# Plot Accuracy & Loss
+plt.figure(figsize=(12, 4))
+
+# Accuracy
+plt.subplot(1, 2, 1)
+plt.plot(history.history["accuracy"], label="Training Accuracy")
+plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
+plt.title("Accuracy Curves")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+
+# Loss
+plt.subplot(1, 2, 2)
+plt.plot(history.history["loss"], label="Training Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
+plt.title("Loss Curves")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap="Blues",
+            xticklabels=class_labels, yticklabels=class_labels)
+plt.xlabel("Predicted")
+plt.ylabel("True")
+plt.title("Confusion Matrix")
+plt.tight_layout()
+plt.show()
+
 # Save model
-model.save("mobilenet_cancer_classifier.h5")
-print("Model saved as mobilenet_cancer_classifier.h5")
+model.save("mobilenet_cancer_classifier.keras")
+print("Model saved as mobilenet_cancer_classifier.keras")

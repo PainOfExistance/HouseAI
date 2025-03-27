@@ -87,7 +87,29 @@ loss, accuracy = model.evaluate(test_generator)
 print(f"Test Loss: {loss:.4f}")
 print(f"Test Accuracy: {accuracy:.4f}")
 
+# Plot Training and Validation Curves
+plt.figure(figsize=(12, 4))
+
+# Plot Accuracy
+plt.subplot(1, 2, 1)
+plt.plot(history.history["accuracy"], label="Training Accuracy")
+plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
+plt.title("Accuracy Curves")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+
+# Plot Loss
+plt.subplot(1, 2, 2)
+plt.plot(history.history["loss"], label="Training Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
+plt.title("Loss Curves")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+
+plt.show()
 
 # Save the Model
-model.save("cancer_classification_model.h5")
-print("Model saved as cancer_classification_model.h5")
+model.save("cancer_classification_model.keras")
+print("Model saved as cancer_classification_model.keras")
