@@ -1,8 +1,7 @@
 tensorflow~=2.12.0
-numpy~=1.26.0
+numpy~=1.24.0
 pandas
 scikit-learn~=1.2.2
 
 matplotlib~=3.10.1
 seaborn~=0.13.2
-sklearn~=0.0.post5
