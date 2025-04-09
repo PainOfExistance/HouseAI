@@ -14,7 +14,9 @@ def run_ensemble():
     for i in range(ENSEMBLE_SIZE):
         print(f"\n🔄 [BC-{i + 1}] Preparing data...")
 
-        X, y = bootstrap_sample_with_errors(all_filepaths, all_labels, errors)
+        #X, y = bootstrap_sample_with_errors(all_filepaths, all_labels, errors)
+        X = all_filepaths
+        y = all_labels
         train_gen = get_generator_from_paths(X, y, IMAGE_SIZE, BATCH_SIZE, augment=True)
 
         model_path = f"{MODEL_SAVE_DIR}/model_{i}.keras"

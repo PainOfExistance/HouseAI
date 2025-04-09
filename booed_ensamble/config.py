@@ -13,11 +13,11 @@ TEST_DIR = os.path.join(DATASET_DIR, "test")
 
 
 
-ENSEMBLE_SIZE = 3  # Try 3–5 to allow the ensemble to learn errors
+ENSEMBLE_SIZE = 1  # Try 3–5 to allow the ensemble to learn errors
 IMAGE_SIZE = (224, 224)  # Match single model
 BATCH_SIZE = 32          # Larger batches stabilize gradients
-SAMPLE_SIZE = 150        # Good balance: not too small, not full data
-EPOCHS = 10              # Give each model a chance to learn
+SAMPLE_SIZE = None       # Good balance: not too small, not full data
+EPOCHS = 20              # Give each model a chance to learn
 INIT_LR = 1e-4
 WEIGHT_DECAY = 1e-4
 

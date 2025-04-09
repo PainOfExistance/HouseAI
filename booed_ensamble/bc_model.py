@@ -8,6 +8,8 @@ import numpy as np
 from tensorflow.keras.optimizers import AdamW
 import tensorflow as tf
 from config import INIT_LR, WEIGHT_DECAY
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
+
 def train_and_evaluate(generator, val_generator, epochs, model_path, y):
     model = build_medical_model()
     model.compile(
@@ -21,7 +23,27 @@ def train_and_evaluate(generator, val_generator, epochs, model_path, y):
         ]
     )
 
-    model.fit(generator, validation_data=val_generator, epochs=epochs, class_weight = compute_weights(y, num_classes=4), verbose=1)
+    callbacks = [
+        EarlyStopping(monitor='val_auc', patience=5, mode='max', verbose=1),
+        ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6),
+        ModelCheckpoint(
+            model_path,
+            monitor='val_auc',
+            save_best_only=True,
+            mode='max'
+        ),
+        TensorBoard(log_dir='./logs', histogram_freq=1)
+    ]
+
+    model.fit(
+        generator,
+        validation_data=val_generator,
+        epochs=epochs,
+        class_weight=compute_weights(y, num_classes=4),
+        callbacks=callbacks,
+        verbose=1
+    )
+
     # Save the model
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save(model_path)

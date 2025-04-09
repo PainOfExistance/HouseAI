@@ -1,11 +1,12 @@
 # dataset_utils.py
+import cv2
 import numpy as np
 import os
 import shutil
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from config import SAMPLE_SIZE
-
 import random
+from specialised import MedicalDataGenerator
 
 
 def bootstrap_sample_with_errors(filepaths, labels, errors, subset_size=SAMPLE_SIZE):
@@ -29,18 +30,45 @@ def bootstrap_sample_with_errors(filepaths, labels, errors, subset_size=SAMPLE_S
     X, y = zip(*final_samples)
     return list(X), list(y)
 
+def medical_preprocess(image):
+    lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    limg = cv2.merge((cl, a, b))
+    image = cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
+
+    # Gamma correction
+    gamma = 0.8
+    invGamma = 1.0 / gamma
+    table = np.array([
+        ((i / 255.0) ** invGamma) * 255
+        for i in np.arange(0, 256)
+    ]).astype("uint8")
+    image = cv2.LUT(image, table)
+
+    return image
+
 
 def get_generator_from_paths(filepaths, labels, image_size, batch_size, augment=False):
-    datagen = ImageDataGenerator(rescale=1./255)
-    if augment:
-        datagen = ImageDataGenerator(
-            rescale=1./255,
-            rotation_range=15,
-            zoom_range=0.1,
-            horizontal_flip=True
-        )
+    import shutil
 
-    # Create temporary directory for generator (Keras needs dirs)
+    if augment:
+        datagen = MedicalDataGenerator(
+            preprocessing_function=lambda x: x / 255.0,
+            rotation_range=15,
+            width_shift_range=0.1,
+            height_shift_range=0.1,
+            shear_range=0.01,
+            zoom_range=0.1,
+            horizontal_flip=True,
+            brightness_range=[0.9, 1.1],
+            fill_mode='constant',
+            cval=0
+        )
+    else:
+        datagen = MedicalDataGenerator(preprocessing_function=lambda x: x / 255.0)
+
     temp_dir = "./temp_training_data"
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
@@ -73,7 +101,7 @@ def create_test_generator(test_dir, image_size=(224, 224), batch_size=32):
     )
 
 def create_validation_generator(val_dir, image_size=(224, 224), batch_size=32):
-    val_datagen = ImageDataGenerator(rescale=1./255)
+    val_datagen = MedicalDataGenerator(preprocessing_function=lambda x: x / 255.0)
     return val_datagen.flow_from_directory(
         val_dir,
         target_size=image_size,
