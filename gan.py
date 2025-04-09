@@ -1,276 +1,251 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models, optimizers
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset, ConcatDataset, TensorDataset
+from torchvision import transforms, datasets
+from torchvision.utils import save_image
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing.image import save_img
 
 IMG_HEIGHT = 64
 IMG_WIDTH = 64
 BATCH_SIZE = 32
 NOISE_DIM = 100
-EPOCHS = 50  # DCGAN training epochs
-CLASSIFIER_EPOCHS = 20  # Classifier training epochs
-AUGMENT_MULTIPLIER = 0.5  # Generate synthetic images to add ~50% extra samples
+EPOCHS = 50
+CLASSIFIER_EPOCHS = 20
+AUGMENT_MULTIPLIER = 0.5
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Paths
 data_dir = "Data/train"
 save_dir = "generated_images"
 os.makedirs(save_dir, exist_ok=True)
 
-# -------------------------------
-# 1. Prepare Data for DCGAN Training
-# -------------------------------
-train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    data_dir,
-    labels='inferred',
-    label_mode='categorical',
-    batch_size=BATCH_SIZE,
-    image_size=(IMG_HEIGHT, IMG_WIDTH),
-    shuffle=True
-)
+gan_transform = transforms.Compose([
+    transforms.Resize((IMG_HEIGHT, IMG_WIDTH)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # [-1, 1]
+])
 
-def normalize_img(image, label):
-    # Normalize to [-1, 1] for DCGAN
-    image = (tf.cast(image, tf.float32) - 127.5) / 127.5
-    return image, label
+train_dataset = datasets.ImageFolder(root=data_dir, transform=gan_transform)
+dcgan_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
 
-train_ds = train_ds.map(normalize_img)
+# DCGAN
+class Generator(nn.Module):
+    def __init__(self):
+        super(Generator, self).__init__()
+        self.label_emb = nn.Embedding(num_classes, NOISE_DIM)
 
-# For the GAN we only care about images:
-def extract_images(image, label):
-    return image
+        self.main = nn.Sequential(
+            nn.Linear(NOISE_DIM, 8*8*256),
+            nn.BatchNorm1d(8*8*256),
+            nn.LeakyReLU(0.2),
+            nn.Unflatten(1, (256, 8, 8)),
+            nn.ConvTranspose2d(256, 128, 5, stride=2, padding=2, output_padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose2d(128, 64, 5, stride=2, padding=2, output_padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.2),
+            nn.ConvTranspose2d(64, 3, 5, stride=2, padding=2, output_padding=1, bias=False),
+            nn.Tanh()
+        )
 
-dcgan_dataset = train_ds.map(lambda img, label: extract_images(img, label))
-dcgan_dataset = dcgan_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+    def forward(self, x):
+        return self.main(x)
 
-# -------------------------------
-# 2. Build and Train DCGAN
-# -------------------------------
-def make_generator_model():
-    model = models.Sequential(name="generator")
-    model.add(layers.Dense(8*8*256, use_bias=False, input_shape=(NOISE_DIM,)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    model.add(layers.Reshape((8, 8, 256)))  # 8x8x256
+# DCGAN
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.main = nn.Sequential(
+            nn.Conv2d(3, 64, 5, stride=2, padding=2),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
+            nn.Conv2d(64, 128, 5, stride=2, padding=2),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
+            nn.Flatten(),
+            nn.Linear(128*16*16, 1)
+        )
 
-    model.add(layers.Conv2DTranspose(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    # Now: 16x16x128
+    def forward(self, x):
+        return self.main(x)
 
-    model.add(layers.Conv2DTranspose(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    # Now: 32x32x64
+generator = Generator().to(device)
+discriminator = Discriminator().to(device)
 
-    model.add(layers.Conv2DTranspose(3, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='tanh'))
-    # Output: 64x64x3
-    return model
+optimizerG = optim.Adam(generator.parameters(), lr=1e-4)
+optimizerD = optim.Adam(discriminator.parameters(), lr=1e-4)
+criterion = nn.BCEWithLogitsLoss()
 
-def make_discriminator_model():
-    model = models.Sequential(name="discriminator")
-    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', input_shape=[IMG_HEIGHT, IMG_WIDTH, 3]))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.3))
-    
-    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same'))
-    model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.3))
-    
-    model.add(layers.Flatten())
-    model.add(layers.Dense(1))
-    return model
-
-generator = make_generator_model()
-discriminator = make_discriminator_model()
-
-cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-
-def discriminator_loss(real_output, fake_output):
-    real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-    return real_loss + fake_loss
-
-def generator_loss(fake_output):
-    return cross_entropy(tf.ones_like(fake_output), fake_output)
-
-generator_optimizer = optimizers.Adam(1e-4)
-discriminator_optimizer = optimizers.Adam(1e-4)
-
-@tf.function
-def train_step(images):
-    noise = tf.random.normal([BATCH_SIZE, NOISE_DIM])
-    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-        generated_images = generator(noise, training=True)
-        
-        real_output = discriminator(images, training=True)
-        fake_output = discriminator(generated_images, training=True)
-        
-        gen_loss = generator_loss(fake_output)
-        disc_loss = discriminator_loss(real_output, fake_output)
-        
-    gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
-    gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
-    
-    generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
-    discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
-    
-    return gen_loss, disc_loss
-
-def train_gan(dataset, epochs):
+def train_gan(dataloader, epochs):
     for epoch in range(epochs):
-        print(f"Starting epoch {epoch+1}/{epochs}")
-        for image_batch in dataset:
-            g_loss, d_loss = train_step(image_batch)
-        if (epoch + 1) % 10 == 0:
-            noise = tf.random.normal([16, NOISE_DIM])
-            generated_images = generator(noise, training=False)
-            fig = plt.figure(figsize=(4, 4))
-            for i in range(generated_images.shape[0]):
-                plt.subplot(4, 4, i+1)
-                plt.imshow((generated_images[i] * 127.5 + 127.5).numpy().astype("uint8"))
-                plt.axis('off')
-            plt.show()
-    print("DCGAN training complete.")
+        print(f"Epoch {epoch+1}/{epochs}")
+        for i, (real_images, _) in enumerate(dataloader):
+            real_images = real_images.to(device)
+            batch_size = real_images.size(0)
 
-train_gan(dcgan_dataset, EPOCHS)
+            # Train Discriminator
+            discriminator.zero_grad()
 
-# Function to generate synthetic images
+            real_output = discriminator(real_images)
+            real_loss = criterion(real_output, torch.full((batch_size, 1), 1.0, device=device))
+
+            noise = torch.randn(batch_size, NOISE_DIM, device=device)
+            fake_images = generator(noise)
+            fake_output = discriminator(fake_images.detach())
+            fake_loss = criterion(fake_output, torch.full((batch_size, 1), 0.0, device=device))
+
+            d_loss = real_loss + fake_loss
+            d_loss.backward()
+            optimizerD.step()
+
+            # Train Generator
+            generator.zero_grad()
+            fake_output = discriminator(fake_images)
+            g_loss = criterion(fake_output, torch.full((batch_size, 1), 1.0, device=device))
+            g_loss.backward()
+            optimizerG.step()
+
+        # Save images
+        with torch.no_grad():
+            noise = torch.randn(16, NOISE_DIM, device=device)
+            generated = generator(noise).cpu()
+            generated = (generated + 1) / 2  # [0,1]
+            save_image(generated, os.path.join(save_dir, f"epoch_{epoch+1}.png"), nrow=4)
+
+train_gan(dcgan_loader, EPOCHS)
+
 def generate_synthetic_images(num_images):
-    noise = tf.random.normal([num_images, NOISE_DIM])
-    synthetic_images = generator(noise, training=False)
-    # Rescale images to [0, 255]
-    synthetic_images = (synthetic_images * 127.5 + 127.5)
+    generator.eval()
+    noise = torch.randn(num_images, NOISE_DIM, device=device)
+    with torch.no_grad():
+        synthetic_images = generator(noise).cpu()
+        synthetic_images = (synthetic_images + 1) / 2  # [0,1]
     return synthetic_images
 
-# Generate synthetic images
-total_train_images = sum([len(tf.io.gfile.listdir(os.path.join("Data/train", folder))) 
-                          for folder in os.listdir("Data/train")])
+total_train_images = sum([len(files) for _, _, files in os.walk(data_dir)])
 num_synthetic = int(total_train_images * AUGMENT_MULTIPLIER)
 synthetic_images = generate_synthetic_images(num_synthetic)
 
-# Save generated images to filesystem
-def generate_and_save_synthetic_images(num_images, save_directory):
-    noise = tf.random.normal([num_images, NOISE_DIM])
-    synthetic_images = generator(noise, training=False)
-    synthetic_images = (synthetic_images * 127.5 + 127.5)
-    for i in range(num_images):
-        img = tf.clip_by_value(synthetic_images[i], 0, 255)
-        img = img.numpy().astype("uint8")
-        file_path = os.path.join(save_directory, f"synthetic_{i}.png")
-        save_img(file_path, img)
-    print(f"Saved {num_images} synthetic images to '{save_directory}'")
+classifier_transform = transforms.Compose([
+    transforms.Resize((IMG_HEIGHT, IMG_WIDTH)),
+    transforms.ToTensor()
+])
 
-# Example: Save 100 synthetic images
-num_synthetic_images = 100
-generate_and_save_synthetic_images(num_synthetic_images, save_dir)
+train_dataset = datasets.ImageFolder("Data/train", transform=classifier_transform)
+valid_dataset = datasets.ImageFolder("Data/valid", transform=classifier_transform)
+test_dataset = datasets.ImageFolder("Data/test", transform=classifier_transform)
 
-# -------------------------------
-# 3. Prepare Data for Classification
-# -------------------------------
-def normalize_classification(image, label):
-    image = tf.cast(image, tf.float32) / 255.0  # Normalize to [0, 1]
-    return image, label
+class Classifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.main = nn.Sequential(
+            nn.Conv2d(3, 32, 3), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3), nn.ReLU(), nn.Flatten(),
+            nn.Linear(128*12*12, 128), nn.ReLU(),
+            nn.Linear(128, 4)
+        )
 
-# Original training, validation, and test datasets (using real images)
-classification_train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "Data/train",
-    labels='inferred',
-    label_mode='categorical',
-    batch_size=BATCH_SIZE,
-    image_size=(IMG_HEIGHT, IMG_WIDTH),
-    shuffle=True
-).map(normalize_classification)
+    def forward(self, x):
+        return self.main(x)
+def train_classifier(model, train_loader, valid_loader, epochs):
+    model.train()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters())
 
-classification_valid_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "Data/valid",
-    labels='inferred',
-    label_mode='categorical',
-    batch_size=BATCH_SIZE,
-    image_size=(IMG_HEIGHT, IMG_WIDTH),
-    shuffle=True
-).map(normalize_classification)
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+        correct = 0
+        total = 0
+        for batch in train_loader:
+            if len(batch) == 2:
+                inputs, labels = batch
+            else:
+                inputs, labels, _ = batch
 
-classification_test_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "Data/test",
-    labels='inferred',
-    label_mode='categorical',
-    batch_size=BATCH_SIZE,
-    image_size=(IMG_HEIGHT, IMG_WIDTH),
-    shuffle=False
-).map(normalize_classification)
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-# -------------------------------
-# 4. Build the Classification Model
-# -------------------------------
-def build_classifier_model():
-    model = models.Sequential([
-        layers.Input(shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
-        layers.Conv2D(32, (3, 3), activation='relu'),
-        layers.MaxPooling2D((2, 2)),
-        layers.Conv2D(64, (3, 3), activation='relu'),
-        layers.MaxPooling2D((2, 2)),
-        layers.Conv2D(128, (3, 3), activation='relu'),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dense(4, activation='softmax')  # Four classes
-    ])
-    return model
+            total_loss += loss.item()
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
 
-# -------------------------------
-# 5. Train and Evaluate Classifier WITHOUT Augmentation
-# -------------------------------
-classifier_no_aug = build_classifier_model()
-classifier_no_aug.compile(optimizer='adam',
-                          loss='categorical_crossentropy',
-                          metrics=['accuracy'])
-print("Training classifier without GAN augmentation:")
-classifier_no_aug.fit(classification_train_ds,
-                      validation_data=classification_valid_ds,
-                      epochs=CLASSIFIER_EPOCHS)
-test_loss_no_aug, test_acc_no_aug = classifier_no_aug.evaluate(classification_test_ds)
-print(f"Test Accuracy without augmentation: {test_acc_no_aug:.2f}")
+        model.eval()
+        val_correct = 0
+        val_total = 0
+        with torch.no_grad():
+            for inputs, labels in valid_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                _, predicted = torch.max(outputs, 1)
+                val_correct += (predicted == labels).sum().item()
+                val_total += labels.size(0)
 
-# -------------------------------
-# 6. Create an Augmented Training Dataset (Real + Synthetic)
-# -------------------------------
-# IMPORTANT: Since the unconditional GAN does not produce labeled images,
-# here we assume for demonstration that the synthetic images represent a specific cancer type.
-# For example, assume they represent "adenocarcinoma". If your classes are in the order:
-# [adenocarcinoma, large.cell.carcinoma, normal, squamous.cell.carcinoma],
-# then "adenocarcinoma" corresponds to index 0.
-synthetic_label = tf.one_hot(0, depth=4)  # One-hot label for adenocarcinoma
-synthetic_labels = tf.repeat(tf.expand_dims(synthetic_label, 0), num_synthetic, axis=0)
+        print(f"Epoch {epoch+1}: Loss: {total_loss/len(train_loader):.4f}, "
+              f"Train Acc: {correct/total:.4f}, Val Acc: {val_correct/val_total:.4f}")
 
-# Convert synthetic images (scaled to [0, 255]) to [0, 1] and create a dataset
-synthetic_images_norm = tf.cast(synthetic_images, tf.float32) / 255.0
-synthetic_ds = tf.data.Dataset.from_tensor_slices((synthetic_images_norm, synthetic_labels))
-synthetic_ds = synthetic_ds.batch(BATCH_SIZE)
+classifier_no_aug = Classifier().to(device)
+train_classifier(classifier_no_aug,
+                DataLoader(train_dataset, BATCH_SIZE, shuffle=True),
+                DataLoader(valid_dataset, BATCH_SIZE),
+                CLASSIFIER_EPOCHS)
 
-# Combine the real training dataset with the synthetic dataset
-augmented_train_ds = classification_train_ds.concatenate(synthetic_ds)
-# Shuffle the combined dataset for training
-augmented_train_ds = augmented_train_ds.shuffle(buffer_size=1000)
+if not isinstance(synthetic_images, torch.Tensor):
+    synthetic_images = torch.tensor(synthetic_images.numpy(), dtype=torch.float32)
 
-# -------------------------------
-# 7. Train and Evaluate Classifier WITH Augmentation
-# -------------------------------
-classifier_with_aug = build_classifier_model()
-classifier_with_aug.compile(optimizer='adam',
-                            loss='categorical_crossentropy',
-                            metrics=['accuracy'])
-print("Training classifier with GAN augmentation:")
-classifier_with_aug.fit(augmented_train_ds,
-                        validation_data=classification_valid_ds,
-                        epochs=CLASSIFIER_EPOCHS)
-test_loss_with_aug, test_acc_with_aug = classifier_with_aug.evaluate(classification_test_ds)
-print(f"Test Accuracy with augmentation: {test_acc_with_aug:.2f}")
+# Create synthetic dataset with proper labels (assuming class 0 for synthetic)
+synthetic_labels = torch.zeros(len(synthetic_images), dtype=torch.long)
+synthetic_dataset = TensorDataset(synthetic_images, synthetic_labels)
 
-# -------------------------------
-# 8. Compare the Results
-# -------------------------------
-print("\nSummary of Classification Results:")
-print(f"Accuracy without augmentation: {test_acc_no_aug:.2f}")
-print(f"Accuracy with GAN augmentation: {test_acc_with_aug:.2f}")
+augmented_dataset = ConcatDataset([train_dataset, synthetic_dataset])
 
+def custom_collate(batch):
+    imgs = []
+    labels = []
+    for item in batch:
+        if len(item) == 2:
+            img, label = item
+        else:
+            img, label, _ = item
+        imgs.append(img)
+        labels.append(label)
+    return torch.stack(imgs, 0), torch.tensor(labels)
+
+augmented_loader = DataLoader(augmented_dataset,
+                            batch_size=BATCH_SIZE,
+                            shuffle=True,
+                            collate_fn=custom_collate)
+
+classifier_with_aug = Classifier().to(device)
+train_classifier(classifier_with_aug,
+                augmented_loader,
+                DataLoader(valid_dataset, BATCH_SIZE),
+                CLASSIFIER_EPOCHS)
+
+def evaluate(model, test_loader):
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
+    return correct / total
+
+test_acc_no_aug = evaluate(classifier_no_aug, DataLoader(test_dataset, BATCH_SIZE))
+test_acc_with_aug = evaluate(classifier_with_aug, DataLoader(test_dataset, BATCH_SIZE))
+
+print(f"\nTest Accuracy without GAN: {test_acc_no_aug:.4f}")
+print(f"Test Accuracy with GAN: {test_acc_with_aug:.4f}")
