@@ -72,3 +72,5 @@ Po izdelavi preliminarnega dela sem tudi omogočil vizualizacijo natančnosti, i
 
 Rene Rajzman:  V sklopu prvega sprinta sem razvil in treniral dva modela za klasifikacijo medicinskih slik. Prvi model je bila osnovna konvolucijska nevronska mreža za binarno klasifikacijo, ki je dosegla 32 % natančnost. Drugi model je temeljil na prenosnem učenju z MobileNetV2 in je dosegel 63 % natančnost. Oba modela sem shranil za nadaljnjo uporabo.
 
+## 1. šprint
+Matej Habjanič: Izdelal sem napreden model za klasifikacijo raka na CT posnetkih z uporabo globokega učenja. Dodal sem predobdelavo slik, ki temelji na medicinskem znanju in potrebah (CLAHE, gamma korekcija). Uporabil sem moderno arhitekturo EfficientNetV2 z optimiziranim učenjem in ročno nastavljenimi utežmi za neuravnotežene razrede. V model sem vključil podrobno evalvacijo (ROC krivulje, Grad-CAM) za boljšo interpretabilnost.
