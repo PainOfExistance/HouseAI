@@ -1,3 +1,5 @@
 .venv
 Data
 venv/
+generated_images/
+generated_images_vqgan/
