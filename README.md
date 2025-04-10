@@ -72,5 +72,21 @@ Po izdelavi preliminarnega dela sem tudi omogočil vizualizacijo natančnosti, i
 
 Rene Rajzman:  V sklopu prvega sprinta sem razvil in treniral dva modela za klasifikacijo medicinskih slik. Prvi model je bila osnovna konvolucijska nevronska mreža za binarno klasifikacijo, ki je dosegla 32 % natančnost. Drugi model je temeljil na prenosnem učenju z MobileNetV2 in je dosegel 63 % natančnost. Oba modela sem shranil za nadaljnjo uporabo.
 
-## 1. šprint
 Matej Habjanič: Izdelal sem napreden model za klasifikacijo raka na CT posnetkih z uporabo globokega učenja. Dodal sem predobdelavo slik, ki temelji na medicinskem znanju in potrebah (CLAHE, gamma korekcija). Uporabil sem moderno arhitekturo EfficientNetV2 z optimiziranim učenjem in ročno nastavljenimi utežmi za neuravnotežene razrede. V model sem vključil podrobno evalvacijo (ROC krivulje, Grad-CAM) za boljšo interpretabilnost.
+
+## 2. šprint
+Liam Mesarec, Kristina Čović: V sklopu drugega šprinta sva se posvetila **testiranju generativnih nasprotniških mrež (GAN) na CT slikah**. Glavni cilj je bil razširiti obseg učnih podatkov za klasifikacijo pljučnih nodulov tako, da sva generirala nove slike s pomočjo dveh pristopov:
+1. **DCGAN (skripta `gan.py`)**  
+   - V tej implementaciji sva uporabila *Deep Convolutional GAN*, ki s preprosto arhitekturo generatorja in diskriminatorja generira 64×64 slike iz naključnega šuma.
+   - Nova sintetična množica slik nato služi kot **augmentacija** pri učenju konvolucijske mreže za klasifikacijo.
+2. **VQGAN (skripta `vqgan.py`)**  
+   - Drugi pristop temelji na *Vector-Quantized GAN*, kjer sliko najprej zakodirava v **diskretno latentno** predstavitev, nato dekodirava nazaj v izhodno dimenzijo.
+   - S tem pristopom sva želela preveriti, ali lahko **diskretizacija latentnega prostora** izboljša kakovost generiranih CT slik.
+
+Po zaključku učenja sva pri vsaki metodi shranila vzorčne slike, ki so se generirale po posameznih epohah učenja. Spodaj so primeri generiranih slik iz `gan.py` in `vqgan.py`:
+
+| Primer DCGAN | Primer VQGAN |
+|--------------|--------------|
+| ![DCGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/vqgan_epoch_50.png) | ![VQGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/epoch_80.png) |
+
+
