@@ -90,6 +90,7 @@ Po zaključku učenja sva pri vsaki metodi shranila vzorčne slike, ki so se gen
 | ![DCGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/vqgan_epoch_50.png) | ![VQGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/epoch_80.png) |
 
 Matej Habjanič:
-Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske metode boosting z bootsrap vzorčenjem. Osnovni model klasifikatorja je model ki ga je razvil kolega Habjanič. Naletel sem na manjše težave
+
+Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske metode boosting z bootstrap vzorčenjem. Osnovni model klasifikatorja je model ki ga je razvil kolega Habjanič. Naletel sem na manjše težave
 
 
