@@ -72,8 +72,6 @@ Po izdelavi preliminarnega dela sem tudi omogočil vizualizacijo natančnosti, i
 
 Rene Rajzman:  V sklopu prvega sprinta sem razvil in treniral dva modela za klasifikacijo medicinskih slik. Prvi model je bila osnovna konvolucijska nevronska mreža za binarno klasifikacijo, ki je dosegla 32 % natančnost. Drugi model je temeljil na prenosnem učenju z MobileNetV2 in je dosegel 63 % natančnost. Oba modela sem shranil za nadaljnjo uporabo.
 
-Matej Habjanič: Izdelal sem napreden model za klasifikacijo raka na CT posnetkih z uporabo globokega učenja. Dodal sem predobdelavo slik, ki temelji na medicinskem znanju in potrebah (CLAHE, gamma korekcija). Uporabil sem moderno arhitekturo EfficientNetV2 z optimiziranim učenjem in ročno nastavljenimi utežmi za neuravnotežene razrede. V model sem vključil podrobno evalvacijo (ROC krivulje, Grad-CAM) za boljšo interpretabilnost.
-
 ## 2. šprint
 Liam Mesarec, Kristina Čović: V sklopu drugega šprinta sva se posvetila **testiranju generativnih nasprotniških mrež (GAN) na CT slikah**. Glavni cilj je bil razširiti obseg učnih podatkov za klasifikacijo pljučnih nodulov tako, da sva generirala nove slike s pomočjo dveh pristopov:
 1. **DCGAN (skripta `gan.py`)**  
@@ -89,8 +87,8 @@ Po zaključku učenja sva pri vsaki metodi shranila vzorčne slike, ki so se gen
 |--------------|--------------|
 | ![DCGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/vqgan_epoch_50.png) | ![VQGAN-slike](https://github.com/PainOfExistance/HouseAI/blob/main/assets/epoch_80.png) |
 
-Matej Habjanič:
+Matej Habjanič: Izdelal sem napreden model za klasifikacijo raka na CT posnetkih z uporabo globokega učenja. Dodal sem predobdelavo slik, ki temelji na medicinskem znanju in potrebah (CLAHE, gamma korekcija). Uporabil sem moderno arhitekturo EfficientNetV2 z optimiziranim učenjem in ročno nastavljenimi utežmi za neuravnotežene razrede. V model sem vključil podrobno evalvacijo (ROC krivulje, Grad-CAM) za boljšo interpretabilnost.
 
-Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske metode boosting z bootstrap vzorčenjem. Osnovni model klasifikatorja je model ki ga je razvil kolega Habjanič. Naletel sem na manjše težave
+Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske metode boosting z bootstrap vzorčenjem. Osnovni klasifikator je pristop, ki ga je razvil kolega Habjanič. Naletel sem na manjše težave zato še o rezultatih ne moram poročati
 
 
