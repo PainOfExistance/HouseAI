@@ -91,4 +91,5 @@ Matej Habjanič: Izdelal sem napreden model za klasifikacijo raka na CT posnetki
 
 Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske metode boosting z bootstrap vzorčenjem. Osnovni klasifikator je pristop, ki ga je razvil kolega Habjanič. Naletel sem na manjše težave zato še o rezultatih ne moram poročati
 
-
+## 3. šprint
+Matej Habjanič: Zaradi kolokvijev količina dela v tem tednu zmanjšana, so pa bili narejeni popravki kode in izboljšana berljivost kot tudi izboljšano evaluviranje modela s kreacijo pomočniških funkcij za posamezne metrike. Izboljšan tudi način kreiranja modelov za ansambelske metode katere bo kasneje Rene uredil in implementiral ter smiselno povezal in zapakiral.
