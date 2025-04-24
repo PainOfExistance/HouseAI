@@ -93,3 +93,5 @@ Rene Rajzman: V sklopu tega šprinta sem začel z implementacijo ansambelske met
 
 ## 3. šprint
 Matej Habjanič: Zaradi kolokvijev količina dela v tem tednu zmanjšana, so pa bili narejeni popravki kode in izboljšana berljivost kot tudi izboljšano evaluviranje modela s kreacijo pomočniških funkcij za posamezne metrike. Izboljšan tudi način kreiranja modelov za ansambelske metode katere bo kasneje Rene uredil in implementiral ter smiselno povezal in zapakiral.
+
+Rene Rajzman: Zaradi kolokvijev in drugih obveznosti ta teden nisem opravil veliko dela. Raziskoval sem kako bi lahko odpravil težave slabih rezultatov Boosting ansambela ampak do implementacije rešitve še ni prišlo. Delo bom nadoknadil v naslednjem šprintu
