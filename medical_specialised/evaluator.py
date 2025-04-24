@@ -11,6 +11,7 @@ from tqdm import tqdm
 class ModelEvaluator:
     @staticmethod
     def generate_medical_report(model, test_gen):
+        """Generate a comprehensive medical evaluation report."""
         print("\n[STATUS] Generating medical evaluation report...")
 
         # Get true and predicted values
@@ -19,21 +20,35 @@ class ModelEvaluator:
         y_pred = np.argmax(y_pred_probs, axis=1)
         class_names = list(test_gen.class_indices.keys())
 
-        # 1. Classification Report
+        # Generate classification report
+        ModelEvaluator._generate_classification_report(y_true, y_pred, class_names)
+
+        # Generate confusion matrix
+        ModelEvaluator._generate_confusion_matrix(y_true, y_pred, class_names)
+
+        # Generate ROC curves
+        ModelEvaluator._generate_roc_curves(y_true, y_pred_probs, class_names)
+
+        # Save misclassified examples
+        ModelEvaluator.save_misclassified(test_gen, y_true, y_pred, class_names)
+
+    @staticmethod
+    def _generate_classification_report(y_true, y_pred, class_names):
         print("\n=== Detailed Classification Report ===")
         print(classification_report(y_true, y_pred, target_names=class_names, digits=4))
 
-        # 2. Confusion Matrix
-        plt.figure(figsize=(10,8))
+    @staticmethod
+    def _generate_confusion_matrix(y_true, y_pred, class_names):
+        plt.figure(figsize=(10, 8))
         cm = confusion_matrix(y_true, y_pred)
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                    xticklabels=class_names, yticklabels=class_names)
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
         plt.title('Confusion Matrix')
         plt.savefig('confusion_matrix.png')
         plt.close()
 
-        # 3. ROC Curves (One-vs-Rest)
-        plt.figure(figsize=(10,8))
+    @staticmethod
+    def _generate_roc_curves(y_true, y_pred_probs, class_names):
+        plt.figure(figsize=(10, 8))
         for i in range(len(class_names)):
             fpr, tpr, _ = roc_curve((y_true == i).astype(int), y_pred_probs[:, i])
             auc_score = roc_auc_score((y_true == i).astype(int), y_pred_probs[:, i])
@@ -47,39 +62,21 @@ class ModelEvaluator:
         plt.savefig('roc_curves.png')
         plt.close()
 
-        # 4. Save Misclassified Examples
-        misclassified = np.where(y_pred != y_true)[0]
-        os.makedirs('misclassified', exist_ok=True)
-
-        for idx in tqdm(misclassified[:20], desc="Saving misclassified examples"):
-            batch_idx = idx // 32
-            img_idx = idx % 32
-
-            batch = test_gen[batch_idx]
-            img = batch[0][img_idx]
-            true_class = class_names[y_true[idx]]
-            pred_class = class_names[y_pred[idx]]
-
-            plt.imshow(img)
-            plt.title(f"True: {true_class}\nPred: {pred_class}")
-            plt.savefig(f'misclassified/{idx}_{true_class}_as_{pred_class}.png')
-            plt.close()
-
-
     @staticmethod
     def save_misclassified(test_gen, y_true, y_pred, class_names, n=20):
+        """Save misclassified examples as images."""
         misclassified = np.where(y_pred != y_true)[0]
         os.makedirs('misclassified', exist_ok=True)
-        
+
         for idx in tqdm(misclassified[:n], desc="Saving misclassified examples"):
             batch_idx = idx // test_gen.batch_size
             img_idx = idx % test_gen.batch_size
-            
+
             batch = test_gen[batch_idx]
             img = batch[0][img_idx]
             true_class = class_names[y_true[idx]]
             pred_class = class_names[y_pred[idx]]
-            
+
             plt.imshow(img)
             plt.title(f"True: {true_class}\nPred: {pred_class}")
             plt.savefig(f'misclassified/{idx}_{true_class}_as_{pred_class}.png')
