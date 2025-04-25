@@ -96,4 +96,29 @@ Matej Habjanič: Zaradi kolokvijev količina dela v tem tednu zmanjšana, so pa 
 
 Rene Rajzman: Zaradi kolokvijev in drugih obveznosti ta teden nisem opravil veliko dela. Raziskoval sem kako bi lahko odpravil težave slabih rezultatov Boosting ansambela ampak do implementacije rešitve še ni prišlo. Delo bom nadoknadil v naslednjem šprintu
 
-Liam Mesarec, Kristina Čović: nadaljevala sma delo na DCGAN in VQGAN, dodala sma več metrik pri učenju da sma lahko analizirala kako natančno delajo GANi, implementacijo GANov sma spremenila da generira slike po razredih. Testirala sma kombinacije podatkovnih zbirk za učenje modelov in različne parametre v GANih.
+Liam Mesarec, Kristina Čović: 
+Nadaljevali sva razvoj generativnih modelov **DCGAN** in **VQGAN** za segmentacijo in razvrščanje CT-slik pljuč. Cilj je bil:
+- Dodati več metrik za oceno kakovosti generiranih slik.
+- Prilagoditi model, da generira slike **po posameznih razredih**.
+- Preizkusiti kombinacije podatkovnih zbirk in različne hiperparametre.
+
+**Priprava podatkov**
+Kombinirala sva 2 dataseta : **The IQ-OTH/NCCD lung cancer dataset** + prej uporabljeni dataset.
+- Dodala sva Normal in Benign slike iz novega dataseta v train/normal originalnega, da dobimo več raznovrstnih “zdravih” primerov  
+
+**Implementacija GAN po razredih**
+- Za vsak razred (`normal`, `adenocarcinoma`, …) se izvede ločen trening GAN-a.
+
+
+**Primeri generiranih slik**
+| Primer normal:| Primer squamous cell carcinoma: |
+|--------------|--------------|
+| ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep046.png) | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep033.png) |
+
+
+| Primer large cell carcinoma:| Primer adenocarcinoma |
+|--------------|--------------|
+| ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep042.png) | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep047.png) |
+
+
+
