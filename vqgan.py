@@ -14,13 +14,13 @@ IMG_HEIGHT, WIDTH  = 256, 256
 DOWNSAMPLE         = 16
 BATCH_SIZE         = 16
 
-EPOCHS_VQGAN       = 100
-EPOCHS_CLASSIFIER  = 120
+EPOCHS_VQGAN       = 40
+EPOCHS_CLASSIFIER  = 20
 
 # ↓↓↓  NEW ↓↓↓ -----------------------------------
 AUGMENT_MULTIPLIER = 0.10   # 10 %   (was 50 %)
 REAL_SYNTH_RATIO   = 0.70   # 70 % real, 30 % synthetic **inside a batch**
-FID_CUTOFF         = 50.0   # optional; skip bad GANs
+FID_CUTOFF         = 500.0   # optional; skip bad GANs, pod 50 bi rablo bit ampak...
 # -----------------------------------------------
 
 DEVICE             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -37,30 +37,52 @@ torch.manual_seed(42);  random.seed(42);  np.random.seed(42)
 # ------------------------------------------------
 # FID helper  (put near the top, after imports)
 # ------------------------------------------------
-def quick_fid(real_dir: str, fake_imgs: torch.Tensor) -> float:
+def quick_fid(real_dir: str, fake_imgs: torch.Tensor, cls: str) -> float:
     """
-    Save n fake images to a tmp folder and compute FID against real_dir.
-    Returns np.inf if torch_fidelity is not installed.
+    Compute FID between all images in train/<cls> and the Tensor fake_imgs
+    (shape [N,3,H,W], values in [0,1]). Returns np.inf if torchmetrics
+    isn't installed.
     """
     try:
-        from torch_fidelity import calculate_metrics
+        from torchmetrics.image.fid import FrechetInceptionDistance
+        from torchvision.datasets import ImageFolder
+        from torch.utils.data import DataLoader, Subset
+        from torchvision import transforms
     except ImportError:
         return float("inf")
 
-    tmp = os.path.join(real_dir, "_tmp_fake")
-    os.makedirs(tmp, exist_ok=True)
-    for i, img in enumerate(fake_imgs):
-        save_image(img, os.path.join(tmp, f"f_{i:04}.png"))
-    metrics = calculate_metrics(input_real=real_dir,
-                                input_fake=tmp,
-                                cuda=torch.cuda.is_available(),
-                                isc=False, kid=False, fid=True)
-    # cleanup
-    for f in os.listdir(tmp):
-        os.remove(os.path.join(tmp, f))
-    os.rmdir(tmp)
-    return metrics["frechet_inception_distance"]
+    # 1) initialize the metric
+    fid = FrechetInceptionDistance(feature=2048).to(DEVICE)
 
+    # common transform to 299×299 uint8
+    tf = transforms.Compose([
+        transforms.Resize((299, 299)),
+        transforms.ToTensor(),  # floats in [0,1]
+    ])
+
+    # 2) load & update on real images (filtering via ImageFolder)
+    #    real_dir should be DATA_ROOT/train
+    full_ds   = ImageFolder(real_dir, transform=tf)
+    cls_idx   = full_ds.class_to_idx[cls]
+    # pick only those samples whose target == cls_idx
+    indices  = [i for i, t in enumerate(full_ds.targets) if t == cls_idx]
+    real_sub  = Subset(full_ds, indices)
+    real_loader = DataLoader(real_sub, batch_size=BATCH_SIZE, num_workers=0)
+
+    for x, _ in real_loader:
+        x_uint8 = (x.clamp(0, 1) * 255).to(torch.uint8).to(DEVICE)
+        fid.update(x_uint8, real=True)
+
+    # 3) resize & update on fake images
+    fake_resized = torch.nn.functional.interpolate(
+        fake_imgs, size=(299, 299), mode='bilinear', align_corners=False
+    )
+    for chunk in fake_resized.split(BATCH_SIZE):
+        chunk_uint8 = (chunk.clamp(0, 1) * 255).to(torch.uint8).to(DEVICE)
+        fid.update(chunk_uint8, real=False)
+
+    # 4) compute & return FID
+    return fid.compute().item()
 
 tf_gan = transforms.Compose([
     transforms.Resize((IMG_HEIGHT, WIDTH)),
@@ -311,16 +333,23 @@ if __name__ == "__main__":
         synth_imgs = sample(vqgan, n_synth)
 
         # FID gate:  skip bad GANs
-        fid = quick_fid(os.path.join(train_root, cls), synth_imgs)
+        fid = quick_fid(os.path.join(DATA_ROOT, "train"), synth_imgs, cls)
         print(f"FID for {cls}: {fid:.1f}")
 
+        # make sure gan_data root exists
+        gan_data_root = "gan_data"
+        os.makedirs(gan_data_root, exist_ok=True)
+
         if fid > FID_CUTOFF:
-            print(f" -> FID worse than {FID_CUTOFF}; "
-                f"synthetic images for {cls} will be ignored.")
-            synth_imgs   = torch.empty(0, 3, IMG_HEIGHT, WIDTH)
+            print(f" -> FID worse than {FID_CUTOFF}; skipping synthetic images for {cls}.")
+            synth_imgs = torch.empty(0, 3, IMG_HEIGHT, WIDTH)
         else:
+            # save into class‐specific subfolder in gan_data/
+            class_out = os.path.join(gan_data_root, cls)
+            os.makedirs(class_out, exist_ok=True)
             for i, img in enumerate(synth_imgs):
-                save_image(img, os.path.join(save_dir, f"synthetic_{i:05}.png"))
+                # each `img` is [3,H,W], in [0,1]
+                save_image(img, os.path.join(class_out, f"{cls}_{i:05}.png"))
 
         n_synth = synth_imgs.size(0)
         if n_synth > 0:
