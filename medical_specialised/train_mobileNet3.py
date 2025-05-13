@@ -2,6 +2,7 @@ import os
 from tensorflow.keras.applications import MobileNetV3Large
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Input
 from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import ModelCheckpoint
 from main import create_generators
 
 MODEL_DIR = "models"
@@ -19,7 +20,15 @@ if __name__ == "__main__":
 
     model = build_mobilenet()
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-    model.fit(train_gen, validation_data=val_gen, epochs=10)
+    checkpoint = ModelCheckpoint(
+        filepath=os.path.join(MODEL_DIR, "mobilenetv3_best.keras"),
+        monitor="val_accuracy",  # or "val_loss"
+        save_best_only=True,
+        save_weights_only=False,
+        verbose=1,
+    )
+
+    model.fit(train_gen, validation_data=val_gen, epochs=10, callbacks=[checkpoint])
 
     os.makedirs(MODEL_DIR, exist_ok=True)
     model.save(os.path.join(MODEL_DIR, "mobilenetv3.keras"))
