@@ -1,5 +1,7 @@
 .venv
 Data
+Data2
 venv/
 generated_images/
 generated_images_vqgan/
+Merged

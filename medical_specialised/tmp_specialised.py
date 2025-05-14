@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
+from keras.saving import register_keras_serializable
 from sklearn.metrics import (average_precision_score, classification_report,
                              confusion_matrix, precision_recall_curve,
                              roc_auc_score, roc_curve)
@@ -15,7 +16,7 @@ from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
 from tensorflow.keras.layers import (Activation, Add, Attention,
                                      BatchNormalization, Conv2D, Dense,
                                      Dropout, Flatten, GlobalAveragePooling2D,
-                                     GlobalMaxPooling2D, Input, Lambda,
+                                     GlobalMaxPooling2D, Input, Lambda, Layer,
                                      MaxPooling2D, Multiply, Reshape,
                                      concatenate)
 from tensorflow.keras.models import Model
@@ -59,7 +60,7 @@ def medical_preprocess(image):
 # =============================================
 IMAGE_SIZE = (256, 256)
 BATCH_SIZE = 32
-EPOCHS = 10
+EPOCHS = 30
 INIT_LR = 1e-4
 WEIGHT_DECAY = 1e-4
 DATASET_DIR = "../Data"
@@ -172,22 +173,33 @@ def channel_attention_module(input_tensor, ratio=8):
     channel_attention = Activation('sigmoid')(Add()([avg_pool, max_pool]))
     return Multiply()([input_tensor, channel_attention])
 
+@register_keras_serializable()
+class ChannelMean(Layer):
+    def call(self, inputs):
+        return tf.reduce_mean(inputs, axis=-1, keepdims=True)
+
+@register_keras_serializable()
+class ChannelMax(Layer):
+    def call(self, inputs):
+        return tf.reduce_max(inputs, axis=-1, keepdims=True)
+
 def spatial_attention_module(input_tensor):
     kernel_size = 7
-    
-    # Channel pooling using Keras layers
-    avg_pool = Lambda(lambda x: tf.reduce_mean(x, axis=-1, keepdims=True), output_shape=lambda s: s[:-1] + (1,))(input_tensor)
-    max_pool = Lambda(lambda x: tf.reduce_max(x, axis=-1, keepdims=True), output_shape=lambda s: s[:-1] + (1,))(input_tensor)
-    concat = concatenate([avg_pool, max_pool])
-    
-    # Convolution
+
+    avg_pool = ChannelMean()(input_tensor)
+    max_pool = ChannelMax()(input_tensor)
+    concat = concatenate([avg_pool, max_pool], axis=-1)
+
     attention = Conv2D(1, kernel_size,
-                      padding='same',
-                      activation='sigmoid',
-                      kernel_initializer='he_normal',
-                      use_bias=False)(concat)
+                       padding='same',
+                       activation='sigmoid',
+                       kernel_initializer='he_normal',
+                       use_bias=False)(concat)
     
     return Multiply()([input_tensor, attention])
+
+
+# ...existing code...
 
 def cbam_block(input_tensor):
     x = channel_attention_module(input_tensor)
@@ -427,9 +439,18 @@ def generate_medical_report(model, test_gen):
         plt.close()
 
 # Load best model and evaluate
+# ...existing code...
+
+globals()['tf'] = tf  # <-- Add this line before loading the model
+
 tf.keras.config.enable_unsafe_deserialization()
-model = tf.keras.models.load_model('best_hybrid_cnn_model.keras')
+model = tf.keras.models.load_model(
+    'best_hybrid_cnn_model.keras',
+    custom_objects={'tf': tf}
+)
 generate_medical_report(model, test_generator)
+
+# ...existing code...
 
 # =============================================
 # 8. Grad-CAM Visualization
