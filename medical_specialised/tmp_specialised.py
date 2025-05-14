@@ -59,7 +59,7 @@ def medical_preprocess(image):
 # =============================================
 IMAGE_SIZE = (256, 256)
 BATCH_SIZE = 32
-EPOCHS = 30
+EPOCHS = 10
 INIT_LR = 1e-4
 WEIGHT_DECAY = 1e-4
 DATASET_DIR = "../Data"
@@ -77,6 +77,7 @@ class MedicalDataGenerator(ImageDataGenerator):
         for batch_x, batch_y in batches:
             processed = np.array([medical_preprocess(img) for img in batch_x])
             yield (processed, batch_y)
+
 
 train_datagen = MedicalDataGenerator(
     preprocessing_function=lambda x: x/255.0,
@@ -96,6 +97,7 @@ train_datagen = MedicalDataGenerator(
 valid_test_datagen = MedicalDataGenerator(
     preprocessing_function=lambda x: x/255.0
 )
+
 
 # Data generators
 print("\n[STATUS] Loading datasets...")
@@ -133,6 +135,7 @@ class_weights = compute_class_weight(
 )
 class_weights = dict(enumerate(class_weights))
 print(f"\nClass Weights: {class_weights}")
+
 
 # =============================================
 # 4. Hybrid CNN Model (EfficientNetV2 + ResNet50)
@@ -173,8 +176,8 @@ def spatial_attention_module(input_tensor):
     kernel_size = 7
     
     # Channel pooling using Keras layers
-    avg_pool = Lambda(lambda x: tf.reduce_mean(x, axis=-1, keepdims=True))(input_tensor)
-    max_pool = Lambda(lambda x: tf.reduce_max(x, axis=-1, keepdims=True))(input_tensor)
+    avg_pool = Lambda(lambda x: tf.reduce_mean(x, axis=-1, keepdims=True), output_shape=lambda s: s[:-1] + (1,))(input_tensor)
+    max_pool = Lambda(lambda x: tf.reduce_max(x, axis=-1, keepdims=True), output_shape=lambda s: s[:-1] + (1,))(input_tensor)
     concat = concatenate([avg_pool, max_pool])
     
     # Convolution
@@ -278,6 +281,7 @@ def build_hybrid_cnn_model():
     model = Model(inputs=input_layer, outputs=outputs)
     return model
 
+
 model = build_hybrid_cnn_model()
 
 # =============================================
@@ -342,6 +346,7 @@ history = model.fit(
     class_weight=class_weights,
     verbose=1
 )
+
 
 # =============================================
 # 7. Comprehensive Evaluation
@@ -422,6 +427,7 @@ def generate_medical_report(model, test_gen):
         plt.close()
 
 # Load best model and evaluate
+tf.keras.config.enable_unsafe_deserialization()
 model = tf.keras.models.load_model('best_hybrid_cnn_model.keras')
 generate_medical_report(model, test_generator)
 
