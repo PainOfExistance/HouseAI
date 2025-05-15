@@ -121,4 +121,24 @@ Kombinirala sva 2 dataseta : **The IQ-OTH/NCCD lung cancer dataset** + prej upor
 | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep042.png) | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep047.png) |
 
 
+## 4. Šprint
 
+Rene Rajzman:
+V tem šprintu sem razvil in preizkusil dva pristopa za izboljšanje klasifikacije, boosting ansambel in hibridni model.
+Ponovno sem se lotil razvoja boosting ansambelskega pristopa na osnovi izjemno uspešnega EfficentNet modela z namenom dodatnega izboljšanja klasifikacije.Modeli so bili trenirani, shranjeni in povezani v ansambel. Kljub višji kompleksnosti in specializaciji posameznih modelov na napake predhodnikov se je rezultat napram samostojnemu modelu žal poslabšal. 
+Implementiran hibridni pristop združuje napovedi treh modelov (EfficientNet, ResNet50 in MobileNetV3). Po implementaciji pristopa učenja ResNet50 in MobileNetV3 (katerih učenje je izvedel kolega Habjanič, saj je moj računalnik naletel na določene težave) sem vse tri obstoječe modele povezal v hibrid čigar testiranje na žalost ni pokazalo izboljšave napram EfficentNet modela.
+
+
+Matej Habjanič:
+V tem šprintu sem dodal EfficientNet del ansambla s pomočjo LayerNormalization in Squeeze-and-Excitation block. To smo testirali na novem datasetu (https://www.kaggle.com/datasets/hamdallak/the-iqothnccd-lung-cancer-dataset) , kjer imamo 3 klasifikacijske razrede, normalno, benigno in pa maligno. Dobili smo sledeče AOC krivulje in matrike zmede:
+
+| Matrika zmede na osnovnem EfficientNet | Matrika zmede na izboljšanem EfficientNet | Matrika zmede na izboljšanem in parametriziranem EfficientNet |
+|--------------|--------------|--------------|
+|![confusion_matrix_newdataset_base](https://github.com/user-attachments/assets/a8ef3297-2329-4791-9e9a-49820b6f831b)|![confusion_matrix_newdataset_improved](https://github.com/user-attachments/assets/769c95ac-933a-4f51-856e-76d171872583)|![confusion_matrix_newdataset_tuned_30e](https://github.com/user-attachments/assets/bb8c6c76-0671-45c9-967e-b7b1387ccdf7)|
+
+
+| AUC krivulja na osnovnem EfficientNet | AUC krivulja na izboljšanem EfficientNet | AUC krivulja na izboljšanem in parametriziranem EfficientNet |
+|--------------|--------------|--------------|
+|![roc_curves_newdataset_base](https://github.com/user-attachments/assets/9dcccc7a-d730-4f82-a8c6-dec3c0168d8e)|![roc_curves_newdataset_improved](https://github.com/user-attachments/assets/13225ed3-4128-4dd2-b248-e1ad4dafdeb1)|![roc_curves_newdataset_tuned_30e](https://github.com/user-attachments/assets/f5ed43b5-ebf9-45ea-9fcd-47c452a98dbd)|
+
+Dodal sem tudi osnovni GUI kateri bo povezan s sistemom učenja.
