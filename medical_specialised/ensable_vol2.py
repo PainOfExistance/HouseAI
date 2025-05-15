@@ -1,9 +1,11 @@
 import os
+
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from main import create_generators
 from evaluator import ModelEvaluator
+from tensorflow.keras.models import load_model
+
+from main import create_generators
 
 MODEL_DIR = "models"
 

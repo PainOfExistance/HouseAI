@@ -1,10 +1,12 @@
 # train_resnet50.py
 
 import os
+
 from tensorflow.keras.applications import ResNet50
-from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Input
-from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Input
+from tensorflow.keras.models import Model
+
 from main import create_generators
 
 MODEL_DIR = "models"
