@@ -142,3 +142,25 @@ V tem šprintu sem dodal EfficientNet del ansambla s pomočjo LayerNormalization
 |![roc_curves_newdataset_base](https://github.com/user-attachments/assets/9dcccc7a-d730-4f82-a8c6-dec3c0168d8e)|![roc_curves_newdataset_improved](https://github.com/user-attachments/assets/13225ed3-4128-4dd2-b248-e1ad4dafdeb1)|![roc_curves_newdataset_tuned_30e](https://github.com/user-attachments/assets/f5ed43b5-ebf9-45ea-9fcd-47c452a98dbd)|
 
 Dodal sem tudi osnovni GUI kateri bo povezan s sistemom učenja.
+
+
+Liam Mesarec, Kristina Čović: 
+Najprej sva združila obstoječo zbirko DICOM CT-rezin z LungCT-Diagnosis (https://www.cancerimagingarchive.net/collection/lungct-diagnosis/) podatki iz TCIA in vse DICOM datoteke pretvorila v PNG format za enostavnejšo obdelavo v CNN.
+
+Na izvirnih slikah je CNN dosegla valAcc ≈ 99 %. Nato sva z VQ-GAN (40 epoh; FID = 465,8 za “cancerous” in 422,0 za “non_cancerous”) sintetizirala dodatne CT-rezine obeh razredov ter jih vključila v učno množico. Po ponovnem učenju CNN na kombinaciji originalnih in sintetičnih slik je testna natančnost znašala 96,63 %. Čeprav je to nekoliko pod prejšnjo vrednostjo, so GAN-slike razširile variabilnost podatkov.
+
+V skripto *medical_specialised.py* sva vključila CT slike, sintetizirane z VQ-GAN-om, skupaj z obstoječimi realnimi posnetki (5 199 realnih + 1 379 sintetičnih slik razredov **cancerous** in **non_cancerous**). EfficientNetV2B0 smo trenirali na tej kombinirani množici in dosegli:  
+- **val_loss:** 0.5511  
+- **val_accuracy:** 0.8300  
+- **val_auc:** 0.8615  
+
+Na testnem naboru (1 099 slik) je model dosegel **test_accuracy = 82,17 %**:  
+- **cancerous:** precision 0,90, recall 0,0849 (F1 = 0,1552)  
+- **non_cancerous:** precision 0,82, recall 0,9977 (F1 = 0,9003)  
+
+
+ Matrika zmede      | AUC krivulje        |
+|:-----------------:|:------------------:|
+| ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/confusion_matrix_vqgan.png) | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/roc_curves_vqgan.png) |
+
+
