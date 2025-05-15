@@ -2,6 +2,7 @@ import os
 from glob import glob
 
 import cv2
+import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,7 +18,8 @@ from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
 from tensorflow.keras.layers import (Activation, Add, BatchNormalization,
                                      Concatenate, Conv2D, Dense, Dropout,
                                      GlobalAveragePooling2D,
-                                     GlobalMaxPooling2D, Multiply, Reshape,
+                                     GlobalMaxPooling2D, Input, Lambda,
+                                     LayerNormalization, Multiply, Reshape,
                                      UpSampling2D)
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import AdamW
@@ -50,16 +52,16 @@ def medical_preprocess(image):
 # =============================================
 # 2. HYPERPARAMETERS & CONFIG
 # =============================================
-IMAGE_SIZE = (224, 224)  # Increased for better feature capture
+IMAGE_SIZE = (224, 224)  # Increased for better feature capture (256, 256)
 BATCH_SIZE = 32
-EPOCHS = 20
+EPOCHS = 20 #30
 INIT_LR = 1e-4
 WEIGHT_DECAY = 1e-4
 DATASET_DIR = "../Data2"
 AUGMENTATION_FACTOR = 2  # For oversampling minority classes
 BATCH_SIZE = 32
-VAL_SPLIT = 0.15
-TEST_SPLIT = 0.15
+VAL_SPLIT = 0.1
+TEST_SPLIT = 0.2
 SEED = 42
 
 # =============================================
@@ -200,110 +202,62 @@ for cls in unique_classes:
 print(f"\nClass Weights: {class_weights}")
 # Reset generator after label extraction
 train_generator.reset()
+
 # =============================================
-# 4. ADVANCED MODEL ARCHITECTURE
+# 6. ADVANCED MODEL ARCHITECTURE
 # =============================================
 
-def channel_attention(input_feature, ratio=8):
-    channel = input_feature.shape[-1]
-    
-    shared_layer_one = Dense(channel//ratio,
-                            activation='swish',
-                            kernel_initializer='he_normal',
-                            use_bias=True,
-                            bias_initializer='zeros')
-    
-    shared_layer_two = Dense(channel,
-                            kernel_initializer='he_normal',
-                            use_bias=True,
-                            bias_initializer='zeros')
-    
-    avg_pool = GlobalAveragePooling2D()(input_feature)    
-    avg_pool = Reshape((1,1,channel))(avg_pool)
-    avg_pool = shared_layer_one(avg_pool)
-    avg_pool = shared_layer_two(avg_pool)
-    
-    max_pool = GlobalMaxPooling2D()(input_feature)
-    max_pool = Reshape((1,1,channel))(max_pool)
-    max_pool = shared_layer_one(max_pool)
-    max_pool = shared_layer_two(max_pool)
-    
-    cbam_feature = Add()([avg_pool,max_pool])
-    cbam_feature = Activation('sigmoid')(cbam_feature)
-    
-    return Multiply()([input_feature, cbam_feature])
+# -------------------------------
+# Squeeze-and-Excitation block
+# -------------------------------
+def squeeze_excite_block(input_tensor, ratio=8):
+    filters = input_tensor.shape[-1]
+    se = GlobalAveragePooling2D()(input_tensor)
+    se = Reshape((1, 1, filters))(se)
+    se = Dense(filters // ratio, activation='swish', kernel_initializer='he_normal')(se)
+    se = Dense(filters, activation='sigmoid', kernel_initializer='he_normal')(se)
+    return Multiply()([input_tensor, se])
 
-def build_enhanced_medical_model():
+# -------------------------------
+# Build medical model
+# -------------------------------
+def build_medical_model():
     base_model = EfficientNetV2B0(
         input_shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3),
         include_top=False,
         weights='imagenet',
     )
-    
-    # Strategic unfreezing with attention to BN layers
-    for layer in base_model.layers:
-        if isinstance(layer, BatchNormalization):
-            layer.trainable = False
-    for layer in base_model.layers[-30:]:
+
+    # Strategic unfreezing of last 20 layers
+    for layer in base_model.layers[-20:]:
         if not isinstance(layer, BatchNormalization):
             layer.trainable = True
 
-    # Feature Pyramid Network Construction
-    c3 = base_model.get_layer('block3a_expand_activation').output  # 1/8 scale
-    c4 = base_model.get_layer('block5a_expand_activation').output  # 1/16 scale
-    c5 = base_model.get_layer('top_activation').output             # 1/32 scale
-
-    # Top-down pathway
-    p5 = Conv2D(256, (1, 1), padding='same')(c5)
-    p5 = channel_attention(p5)
-    p5_upsampled = UpSampling2D(size=(2, 2))(p5)
-    
-    p4 = Conv2D(256, (1, 1), padding='same')(c4)
-    p4 = Add()([p5_upsampled, p4])
-    p4 = channel_attention(p4)
-    p4_upsampled = UpSampling2D(size=(2, 2))(p4)
-    
-    p3 = Conv2D(256, (1, 1), padding='same')(c3)
-    p3 = Add()([p4_upsampled, p3])
-    p3 = channel_attention(p3)
-    
-    # Build multi-scale features
-    p3 = GlobalAveragePooling2D()(p3)
-    p4 = GlobalAveragePooling2D()(p4)
-    p5 = GlobalAveragePooling2D()(p5)
-    
-    x = Concatenate()([p3, p4, p5])
+    x = base_model.output
+    x = squeeze_excite_block(x)              # ✅ Attention
+    x = LayerNormalization()(x)              # ✅ Stabilize post-attention
+    x = GlobalAveragePooling2D()(x)
     x = BatchNormalization()(x)
-    
-    # Enhanced classification head
-    x = Dense(512, activation='swish', 
-              kernel_regularizer=l2(WEIGHT_DECAY),
-              kernel_initializer='he_normal')(x)
-    x = Dropout(0.6)(x)
-    x = BatchNormalization()(x)
-    
-    x = Dense(256, activation='swish',
-              kernel_regularizer=l2(WEIGHT_DECAY),
-              kernel_initializer='he_normal')(x)
-    x = Dropout(0.4)(x)
-    
-    outputs = Dense(3, activation='softmax', 
-                    kernel_regularizer=l2(WEIGHT_DECAY))(x)
+    x = Dense(256, activation='swish', kernel_regularizer=l2(WEIGHT_DECAY))(x)
+    x = Dropout(0.4)(x)                       # ✅ Slightly lower dropout for stability
+    x = Dense(128, activation='swish', kernel_regularizer=l2(WEIGHT_DECAY))(x)
+    x = Dropout(0.2)(x)
+    outputs = Dense(3, activation='softmax', kernel_regularizer=l2(WEIGHT_DECAY))(x)
 
     model = Model(inputs=base_model.input, outputs=outputs)
-    
     return model
 
-model = build_enhanced_medical_model()
+# Instantiate the model
+model = build_medical_model()
 
 # =============================================
 # 5. OPTIMIZED TRAINING SETUP
 # =============================================
+
 optimizer = AdamW(
     learning_rate=INIT_LR,
     weight_decay=WEIGHT_DECAY
 )
-
 model.compile(
     optimizer=optimizer,
     loss='categorical_crossentropy',
@@ -342,6 +296,7 @@ history = model.fit(
     verbose=1
 )
 
+
 # =============================================
 # 7. COMPREHENSIVE EVALUATION
 # =============================================
@@ -349,7 +304,7 @@ def generate_medical_report(model, test_gen):
     print("\n[STATUS] Generating medical evaluation report...")
     
     # Get true and predicted values
-    y_true = test_gen.classes
+    y_true = np.array(test_gen.classes)
     y_pred_probs = model.predict(test_gen, verbose=1)
     y_pred = np.argmax(y_pred_probs, axis=1)
     class_names = list(test_gen.class_indices.keys())
@@ -401,6 +356,7 @@ def generate_medical_report(model, test_gen):
         plt.close()
 
 # Load best model and evaluate
+keras.config.enable_unsafe_deserialization()
 model = tf.keras.models.load_model('best_model.keras')
 generate_medical_report(model, test_generator)
 
