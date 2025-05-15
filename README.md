@@ -121,4 +121,9 @@ Kombinirala sva 2 dataseta : **The IQ-OTH/NCCD lung cancer dataset** + prej upor
 | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep042.png) | ![](https://github.com/PainOfExistance/HouseAI/blob/main/assets/recon_ep047.png) |
 
 
+## 4. Šprint
 
+Rene Rajzman:
+V tem šprintu sem razvil in preizkusil dva pristopa za izboljšanje klasifikacije, boosting ansambel in hibridni model.
+Ponovno sem se lotil razvoja boosting ansambelskega pristopa na osnovi izjemno uspešnega EfficentNet modela z namenom dodatnega izboljšanja klasifikacije.Modeli so bili trenirani, shranjeni in povezani v ansambel. Kljub višji kompleksnosti in specializaciji posameznih modelov na napake predhodnikov se je rezultat napram samostojnemu modelu žal poslabšal. 
+Implementiran hibridni pristop združuje napovedi treh modelov (EfficientNet, ResNet50 in MobileNetV3). Po implementaciji pristopa učenja ResNet50 in MobileNetV3 (katerih učenje je izvedel kolega Habjanič, saj je moj računalnik naletel na določene težave) sem vse tri obstoječe modele povezal v hibrid čigar testiranje na žalost ni pokazalo izboljšave napram EfficentNet modela.
