@@ -13,8 +13,8 @@ MODEL_DIR = "models"
 def load_all_models():
     return [
         load_model(os.path.join(MODEL_DIR, "medical_specialised.keras")),  # EfficientNet
-        load_model(os.path.join(MODEL_DIR, "mobilenetv3.keras")),
-        load_model(os.path.join(MODEL_DIR, "resnet50.keras")),
+        load_model(os.path.join(MODEL_DIR, "mobilenetv3_best.keras")),
+        load_model(os.path.join(MODEL_DIR, "resnet50_best.keras")),
     ]
 
 
@@ -24,7 +24,7 @@ def predict_with_hybrid(models, x):
 
 
 if __name__ == "__main__":
-    _, _, test_gen, _ = create_generators()
+    _, _, test_gen, _ = create_generators("../Data2")
 
     models = load_all_models()
 

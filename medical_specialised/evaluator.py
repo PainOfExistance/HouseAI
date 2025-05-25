@@ -16,7 +16,7 @@ class ModelEvaluator:
 
         # Get true and predicted values
         y_true = test_gen.classes
-        y_pred_probs = model.predict(test_gen, verbose=1)
+        y_pred_probs = model.predict(test_gen)
         y_pred = np.argmax(y_pred_probs, axis=1)
         class_names = list(test_gen.class_indices.keys())
 
@@ -48,6 +48,7 @@ class ModelEvaluator:
 
     @staticmethod
     def _generate_roc_curves(y_true, y_pred_probs, class_names):
+        y_true=np.array(y_true)
         plt.figure(figsize=(10, 8))
         for i in range(len(class_names)):
             fpr, tpr, _ = roc_curve((y_true == i).astype(int), y_pred_probs[:, i])

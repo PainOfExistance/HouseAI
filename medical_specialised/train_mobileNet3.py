@@ -10,7 +10,7 @@ from main import create_generators
 MODEL_DIR = "models"
 
 
-def build_mobilenet(input_shape=(224, 224, 3), num_classes=4):
+def build_mobilenet(input_shape=(224, 224, 3), num_classes=3):
     base = MobileNetV3Large(include_top=False, weights="imagenet", input_tensor=Input(shape=input_shape))
     x = GlobalAveragePooling2D()(base.output)
     out = Dense(num_classes, activation="softmax")(x)
@@ -18,7 +18,7 @@ def build_mobilenet(input_shape=(224, 224, 3), num_classes=4):
 
 
 if __name__ == "__main__":
-    train_gen, val_gen, _, _ = create_generators()
+    train_gen, val_gen, _, _ = create_generators("../Data2")
 
     model = build_mobilenet()
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
