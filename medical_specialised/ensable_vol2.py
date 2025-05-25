@@ -43,3 +43,10 @@ if __name__ == "__main__":
         np.argmax(y_pred, axis=1),
         list(test_gen.class_indices.keys())
     )
+
+    print("\n=== Hybrid Ensemble Evaluation ===")
+
+    ModelEvaluator.generate_medical_report(
+        model=type("HybridModel", (), {"predict": lambda _, x: predict_with_hybrid(models, x)})(),
+        test_gen=test_gen
+    )
