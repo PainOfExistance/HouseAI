@@ -49,9 +49,9 @@ def create_generators():
             shuffle=shuffle
         )
 
-    train_gen = create_flow(train_datagen, "../Data/train", shuffle=True)
-    val_gen = create_flow(val_test_datagen, "../Data/valid", shuffle=False)
-    test_gen = create_flow(val_test_datagen, "../Data/test", shuffle=False)
+    train_gen = create_flow(train_datagen, "Data_2/train", shuffle=True)
+    val_gen = create_flow(val_test_datagen, "Data_2/valid", shuffle=False)
+    test_gen = create_flow(val_test_datagen, "Data_2/test", shuffle=False)
 
     class_weights = compute_class_weight(
         'balanced',

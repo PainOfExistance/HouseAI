@@ -6,6 +6,9 @@ import json
 from model import CancerClassifier
 from trainer import ModelTrainer
 from evaluator import ModelEvaluator
+from collections import Counter
+from sklearn.utils.class_weight import compute_class_weight
+from tensorflow.keras.callbacks import EarlyStopping
 
 
 def extract_from_generator(generator):
@@ -30,8 +33,8 @@ def compute_sample_weights(model, x_train, y_true):
 def train_boosting_ensemble(
     train_gen,
     val_gen,
-    class_weights,
-    class_names,
+    class_weights=None,
+    class_names=None,
     num_rounds=3,
     save_dir="boost_models"
 ):
@@ -41,6 +44,22 @@ def train_boosting_ensemble(
     print("\n[INFO] Extracting data from generators...")
     x_train, y_train = extract_from_generator(train_gen)
     x_val, y_val = extract_from_generator(val_gen)
+
+    # 🧮 Analiza porazdelitve razredov
+    y_train_labels = np.argmax(y_train, axis=1)
+    class_counts = Counter(y_train_labels)
+    print(f"\n[INFO] Razredna porazdelitev (train): {dict(class_counts)}")
+
+    if class_weights is None and class_names is not None:
+        print("[INFO] Samodejno računam class_weights...")
+        weights = compute_class_weight(
+            class_weight='balanced',
+            classes=np.unique(y_train_labels),
+            y=y_train_labels
+        )
+        class_weights = {i: w for i, w in enumerate(weights)}
+        print(f"[INFO] Izračunani class_weights: {class_weights}")
+
     sample_weights = np.ones(len(y_train)) / len(y_train)
 
     for round_idx in range(num_rounds):
@@ -49,7 +68,14 @@ def train_boosting_ensemble(
         trainer = ModelTrainer(model, None, None, class_weights)
         trainer.compile_model(lr=1e-4)
 
-        # DISABLE ModelCheckpoint to avoid save_model errors
+        model.predict(np.zeros((1, 224, 224, 3)))
+
+        early_stopping = EarlyStopping(
+            monitor="val_loss",  # ali "val_accuracy"
+            patience=3,
+            restore_best_weights=True
+        )
+
         model.fit(
             x_train,
             y_train,
@@ -57,7 +83,7 @@ def train_boosting_ensemble(
             validation_data=(x_val, y_val),
             epochs=15 if round_idx == 0 else 5,
             batch_size=32,
-            callbacks=[],  # no callbacks that could trigger model.save()
+            callbacks=[early_stopping],
             verbose=1
         )
 
@@ -81,6 +107,7 @@ def train_boosting_ensemble(
     for path in model_weight_paths:
         model = CancerClassifier.build_model()
         model.load_weights(path)
+        model.predict(np.zeros((1, 224, 224, 3)))
         models.append(model)
 
     final_preds = predict_with_ensemble(models, x_val)

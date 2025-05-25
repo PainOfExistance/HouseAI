@@ -7,7 +7,7 @@ from tensorflow.keras.regularizers import l2
 
 class CancerClassifier:
     @staticmethod
-    def build_model(input_shape=(224, 224, 3), num_classes=4, weight_decay=1e-4):
+    def build_model(input_shape=(224, 224, 3), num_classes=3, weight_decay=1e-4):
         base_model = EfficientNetV2B0(
             input_shape=input_shape,
             include_top=False,
