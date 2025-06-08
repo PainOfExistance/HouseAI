@@ -34,7 +34,7 @@ Model EfficientNetV2B0, treniran na kombinaciji 5 199 realnih in 1 379 sintetič
 
 Spodnja tabela vključuje primerjave nekaterih študij z našimi modeli; BinaryCNN, MobileNetV2, EfficientNetV2B0 in EfficientNetV2B0 z VQGAN podatki.
 
-| Študija / arhitektura                     |     ACC    |
+| Študija / arhitektura                     |     točnost    |
 | ----------------------------------------- | :--------: |
 | Klangbunrueang *et al.* – VGG-16 [[16]](#16)      |  0.981 |
 | Klangbunrueang *et al.* – MobileNetV2[[16]](#16) |    0.945   |
