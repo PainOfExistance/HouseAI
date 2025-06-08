@@ -1,14 +1,68 @@
 
 # Sistem za prepoznavo rakavih nodulov na pljučah z uporabo konvolucijskih nevronskih mrež nad podatki augmentiranimi z generativno nasprotniško mrežo
 
-## Definicija problema
+## 1 UVOD
 Med rakavimi bolniki največ življenj vzame plučni rak, saj je pogosto odkrit prepozno, ko so možnosti zdravljenja zelo omejene. Glede na celično sestavo pljučni rak delimo na drobnocelični (angl. small cell lung cancer - SCLC) in nedrobnocelični pljučni rak (angl. non-small cell lung cancer - NSCLC) [[1]](#1). Najbolj zanesljiv in pogost način za zgodnje odkrivanje bolezni je nizkodozno računalniško tomografiranje (CT) [[2, 3]](#2), ki omogoča zaznavo abnormalnosti v pljučih posameznika. Ustvarjene CT slike pregleda radiolog in po potrebi izvede nadaljne raziskave na pacientu, da ugotovi prisotnost rakavih celic [[3]](#3). V omenjenem procesu obstaja veliko prostora za človeške napake, zato se je z razvojem nevronskih mrež začelo razvijati sisteme, ki s pomočjo umetne inteligence prepoznajo abnormalnosti na CT slikah [[4]](#4). Problem nevronskih mrež je, da potrebujejo veliko število označenih učnih podatkov, kar pa je pri medicinskih slikah pogosto težava. Z namenom odpravljanja te težave se je v zadnjih letih na področju pljučnega raka začelo eksperimentirati z uporabo generativnih nasprotniških mrež (GAN) [[5, 6]](#5). GAN omogočajo učenje globokih reprezentacij brez potrebe po obsežno označenih učnih podatkih. To dosežejo na podlagi povratnega širjenja napake (backpropagation) in tekmovalnim procesom med dvema agentoma [[7]](#7).
 
 - **ključne besede**: računalniško podprta diagnostika (CAD), konvolucijska nevronska mreža (CNN), globoko učenje, obdelava medicinskih slik, generativna nasprotniška mreža (GAN)
 - **keywords**: Computer-aided diagnosis (CAD), Convolutional neural network (CNN), Deep learning, Medical image processing, Generative adversarial network (GAN)
 
-## Pregled sorodnih del
+## 2 SORODNA DELA
 Diagnoza pljučnega raka s pomočjo globokega učenja ali CNN temelji na klasificiranju škodljivosti pljučnih nodulov [[8]](#8). Za to potrebujemo zelo veliko množico učnih podatkov. Najpogosteje uporabljene v najboljših modelih v letih 2021 do 2024 so LC25000, LIDC-IDRI in LungCT-Diagnosis [[4]](#4). Veliko je tudi manjših množic kot so QIN LUNG CT in LUNA2016 [[9, 10]](#9). Ker so učne množice majhne s samo nekaj tisoč slikami pljučnih nodulov, so podatki pogosto augmentirani s slikovnimi transformacijami [[11]](#11). Novejša metoda augmentacije je GAN, ki namesto geometrijskega transformiranja tvori nove slike s tekmovanjem med dvema nevronskima mrežama kjer ena mreža generira podatke, druga pa poskuša ugibati če so ti podatki prišli iz originalne učne množice ali so bili generirani [[11, 12]](#11). StyleGAN generira nove slike na podlagi značilk učnih podatkov, kar bi lahko bilo uporabljeno za učenje značilk pljučnih nodulov [[13]](#13). CycleGAN lahko generira slike, ki so bile zajete v različnih domenah, kot je pretvorba MRI v CT [[14]](#14). Za preverjanje realističnosti slike se uporablja Fretchet Inception Distance [[13, 14]](#13). Problem majhnih množic učnih podatkov se lahko rešuje z uporabo predhodno naučene nevronske mreže, ki lahko dosegajo natančnost nad 0.95, vendar zahtevajo dobro optimizacijo z uporabo metod prenosa znanja [[15]](#15). Rezultati ene izmed študij kažejo, da je VGG-16 dosegel natančnost 0.981, MobileNet  0.945, ResNet50 0.925 in InceptionV3 0.92 [[16]](#16). Večjo natančnost so zasledili pri modelih CNN GD z 0.9786 [[17]](#17) in 0.9945 s CNN [[18]](#18). Zelo visoko natančnost ima tudi LDNNET z natančnostjo 0.988396 [[19]](#19). U-Net modeli so popularni za medicinske slike vendar imajo manjšo natančnost med 0.8 do 0.9 [[20]](#20). 
+
+## 3 Metodologija
+
+Za učenje in validacijo smo združili dve javno dostopni zbirki:
+
+| Zbirka (povezava v README)    | # rezin | Opombe                                   |
+|-------------------------------|:-------:|------------------------------------------|
+| **LungCT-Diagnosis** (TCIA)   |  3 971  | začetni DICOM; pretvorjeno v PNG         |
+| **IQ-OTH/NCCD**               |  1 228  | razredi *normal / benign / malignant*    |
+
+Zbirki smo poenotili v dve klasifikaciji (*cancerous* vs *non_cancerous*) ter razdelili v razmerju **70 % train / 15 % val / 15 % test**. Datoteka `info_o_podatkih.txt` v repozitoriju opisuje izvor in strukturo nabora.
+
+Predobdelava slik je potekala v več korakih:
+
+| Korak                   | Opis postopka                                                    |
+|-------------------------|------------------------------------------------------------------|
+| **Normalizacija**       | surovi RGB-PNG ⟶ `float32 / 255.`                                |
+| **CLAHE**               | LAB-prestavitev • `clipLimit = 3.0`, `tileGrid = 8×8`             |
+| **γ-korekcija**         | **γ = 0.8** (tabela “power-law”)                                 |
+| **Geometrija**          | `rotation_range=15°`, `horizontal_flip=True`, zmerni `zoom/shift/shear` |
+| **Sprememba velikosti** | `target_size=(224,224)` za vse CNN-e                             |
+| **Batch-wise klic**     | lastni **`MedicalDataGenerator`** najprej pokliče `flow_from_directory`, nato na vsako batch-sliko uporabi `medical_preprocess` |
+
+Sintetično povečanje z uporabo **class-conditional VQ-GAN** (datoteka `vqgan.py`) je zajemalo 40 epoh treninga z naslednjimi glavnimi parametri:
+
+| Parameter             | Vrednost        |
+|-----------------------|----------------:|
+| Širina encoder/decoder| 256 kanalov     |
+| Latent grid           | 16 × 16          |
+| Optimizer             | Adam, lr = 1 × 10⁻⁴ |
+| FID (cancer/non)      | 465.8 / 422.0   |
+
+Generirali smo približno 1 400 novih rezin (~27 % več podatkov), ki so bile dodane v učni del. Za primerjavo so na voljo tudi rezultati DCGAN (datoteka `gan.py`, 64² px), ki pa niso izboljšali končne učinkovitosti.
+
+Za klasifikacijo smo preizkusili več modelov:
+
+| Model / okvir                         | Pre-trained uteži | Epoh   | Izguba           |
+|---------------------------------------|-------------------|-------:|------------------|
+| **MobileNetV2**                       | ImageNet          | 30     | Categorical CE   |
+| **Binary CNN**                        | – (from scratch)  | 10     | Binary CE        |
+| **EfficientNetV2B0**                  | ImageNet          | 20     | Categorical CE   |
+| **SimpleCNN (PyTorch)** – real data   | – (from scratch)  | 20     | Cross-entropy    |
+| **SimpleCNN (PyTorch)** – real + VQ-GAN| – (from scratch)  | 20     | Cross-entropy    |
+
+Razlaga napovedi temelji na Grad-CAM toplotnih kartah (funkcija `generate_gradcam(...)`), katerih primer je shranjen kot `gradcam_example.png`.
+
+Za tvorbo ansamblov smo razvili modul `booed_ensamble/`, ki podpira boosting (`ensamble.py`, `main.py`) in večinsko glasovanje (`vote.py`); dosežena natančnost je do 0.81 ACC, vendar trenutno ne presega najboljšega modela EfficientNetV2B0 (valid ACC ≈ 0.83 v `medical_specialised.py`). Grafični vmesnik (Tkinter, datoteka `GUI/main.py`) omogoča izbiro podatkovne mape, nastavitev epoh in velikosti batcha ter klasifikacijo s shranjenimi `.keras` modeli.
+
+Metrični protokol vključuje:
+
+- **TensorFlow** skripte (`medical_specialised.py`, `cancer_classifier_cnn*.py`) z metričnimi sloji `accuracy`, `AUC`, `precision`, `recall`; vizualizacija kot `confusion_matrix.png` in `roc_curves.png`.
+- **PyTorch** eksperiment (`vqgan_cnn.py`) s tiskom trenirne in validacijske točnosti ter shranjevanjem vzorčnih rekonstrukcij v `generated_images_vqgan_*/*`.
+- Enkratna delitev *train / valid / test* v mapi `Data/`.
+
 
 ## Načrt rešitve
 - **skupina:** 1
